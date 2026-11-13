@@ -1,0 +1,66 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>Quy định hệ thống & Quản lý tài khoản</h1>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1.2fr;gap:20px;">
+  <div class="card">
+    <h3 class="card-title">Thông tin cửa hàng & Tham số</h3>
+    <form method="post">
+      <input type="hidden" name="action" value="save_params">
+      {% for key, label in param_labels %}
+        <div class="form-group">
+          <label>{{ label }}</label>
+          <input type="text" name="{{ key }}" value="{{ params.get(key, '') }}">
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Tài khoản nhân viên & quản trị</h3>
+    <form method="post" style="display:grid;grid-template-columns:1fr 1fr 1.2fr 1fr auto;gap:8px;margin-bottom:14px;">
+      <input type="hidden" name="action" value="add_user">
+      <input type="text" name="TenDangNhap" required placeholder="Tên đăng nhập">
+      <input type="password" name="MatKhau" required placeholder="Mật khẩu">
+      <input type="text" name="HoTen" required placeholder="Họ tên">
+      <select name="VaiTro">
+        <option value="nhanvien">Nhân viên</option>
+        <option value="admin">Quản trị</option>
+      </select>
+      <button type="submit" class="btn btn-primary">+ Tạo</button>
+    </form>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Tên đăng nhập</th>
+          <th>Họ tên</th>
+          <th>Vai trò</th>
+          <th class="text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td><strong>{{ u.TenDangNhap }}</strong></td>
+            <td>{{ u.HoTen }}</td>
+            <td><span class="badge {{ 'badge-gold' if u.VaiTro == 'admin' else 'badge-info' }}">{{ u.VaiTro }}</span></td>
+            <td class="text-right">
+              {% if u.MaND != g.user.MaND %}
+                <form method="post" style="display:inline;" onsubmit="return confirm('Xóa tài khoản này?');">
+                  <input type="hidden" name="action" value="delete_user">
+                  <input type="hidden" name="MaND" value="{{ u.MaND }}">
+                  <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

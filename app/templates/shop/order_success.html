@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Đặt hàng thành công #{{ p.SoPhieu }} – {{ store.TenCuaHang }}{% endblock %}
+{% block content %}
+<div class="container section">
+  <div class="card" style="max-width:760px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <span class="badge badge-success" style="font-size:0.9rem;padding:6px 14px;">✓ Đặt hàng thành công</span>
+      <h1 style="margin:10px 0 4px;">Mã phiếu bán hàng: #{{ p.SoPhieu }}</h1>
+      <p style="color:var(--slate-500);margin:0;">Quý khách có thể dùng Số phiếu <strong>#{{ p.SoPhieu }}</strong> và SĐT <strong>{{ p.SoDienThoai }}</strong> để tra cứu trạng thái đơn hàng.</p>
+    </div>
+
+    <div style="background:var(--gold-50);padding:14px;border-radius:10px;margin-bottom:16px;">
+      <div><strong>Khách hàng:</strong> {{ p.TenKH }} — <strong>SĐT:</strong> {{ p.SoDienThoai }}</div>
+      <div><strong>Địa chỉ:</strong> {{ p.DiaChi }}</div>
+      <div><strong>Ngày lập:</strong> {{ p.NgayLap|date }} — <strong>Trạng thái:</strong> <span class="badge badge-warning">{{ p.TrangThai }}</span></div>
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>STT</th>
+          <th>Sản phẩm</th>
+          <th class="text-center">SL</th>
+          <th class="text-right">Đơn giá</th>
+          <th class="text-right">Thành tiền</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in lines %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ l.TenSP }}</td>
+            <td class="text-center">{{ l.SoLuong }} {{ l.TenDVT }}</td>
+            <td class="text-right">{{ l.DonGiaBan|vnd }}</td>
+            <td class="text-right">{{ l.ThanhTien|vnd }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="4" class="text-right">Tổng cộng:</th>
+          <th class="text-right" style="font-size:1.15rem;color:var(--gold-600);">{{ p.TongTien|vnd }}</th>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div style="display:flex;justify-content:center;gap:12px;margin-top:20px;">
+      <a class="btn btn-outline" href="{{ url_for('shop.order_lookup', so_phieu=p.SoPhieu, sdt=p.SoDienThoai) }}">Tra cứu đơn hàng</a>
+      <a class="btn btn-primary" href="{{ url_for('shop.products') }}">Tiếp tục mua sắm</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

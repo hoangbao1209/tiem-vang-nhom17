@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Tra cứu đơn hàng – {{ store.TenCuaHang }}{% endblock %}
+{% block content %}
+<div class="container section">
+  <div class="card" style="max-width:760px;margin:0 auto;">
+    <h1 style="margin-top:0;">Tra cứu phiếu bán / đơn đặt hàng</h1>
+    <form method="get" style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:20px;">
+      <div class="form-group" style="margin:0;">
+        <label>Số phiếu bán hàng</label>
+        <input type="number" name="so_phieu" value="{{ so_phieu }}" required placeholder="Ví dụ: 4">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label>Số điện thoại khách hàng</label>
+        <input type="text" name="sdt" value="{{ sdt }}" required placeholder="Ví dụ: 0938777888">
+      </div>
+      <button type="submit" class="btn btn-primary">Tra cứu</button>
+    </form>
+
+    {% if searched %}
+      {% if p %}
+        <div style="background:var(--gold-50);padding:14px;border-radius:10px;margin-bottom:14px;">
+          <div><strong>Phiếu bán hàng #{{ p.SoPhieu }}</strong> ({{ p.Nguon }}) — Ngày lập: {{ p.NgayLap|date }}</div>
+          <div>Khách hàng: <strong>{{ p.TenKH }}</strong> ({{ p.SoDienThoai }}) — Địa chỉ: {{ p.DiaChi or '—' }}</div>
+          <div>Trạng thái: <span class="badge {{ 'badge-success' if p.TrangThai == 'Hoàn tất' else ('badge-danger' if p.TrangThai == 'Đã hủy' else 'badge-warning') }}">{{ p.TrangThai }}</span></div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th>Sản phẩm</th>
+              <th class="text-center">SL</th>
+              <th class="text-right">Đơn giá</th>
+              <th class="text-right">Thành tiền</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for l in lines %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ l.TenSP }}</td>
+                <td class="text-center">{{ l.SoLuong }} {{ l.TenDVT }}</td>
+                <td class="text-right">{{ l.DonGiaBan|vnd }}</td>
+                <td class="text-right">{{ l.ThanhTien|vnd }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="4" class="text-right">Tổng tiền:</th>
+              <th class="text-right" style="color:var(--gold-600);font-size:1.15rem;">{{ p.TongTien|vnd }}</th>
+            </tr>
+          </tfoot>
+        </table>
+      {% else %}
+        <div class="alert alert-error">Không tìm thấy phiếu bán hàng khớp với số phiếu và số điện thoại đã nhập.</div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <span class="hero-badge">✨ Tinh hoa kim hoàn Việt – Uy tín & Chuẩn tuổi vàng</span>
+      <h1>Trang sức Vàng Bạc & Đá Quý {{ store.TenCuaHang }}</h1>
+      <p>Giá bán niêm yết minh bạch theo từng dòng sản phẩm, kiểm định chất lượng rõ ràng, hỗ trợ đặt giữ hàng trực tuyến và gia công – làm mới trang sức tại cửa hàng.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <a class="btn btn-primary" href="{{ url_for('shop.products') }}">Khám phá bộ sưu tập</a>
+        <a class="btn btn-outline" href="{{ url_for('shop.dich_vu') }}" style="background:transparent;color:#fff;border-color:rgba(255,255,255,0.4);">Xem bảng giá dịch vụ</a>
+      </div>
+    </div>
+    <div class="hero-card">
+      <h3>Cam kết tại {{ store.TenCuaHang }}</h3>
+      <div class="hero-stat-list">
+        <div class="hero-stat">
+          <strong>999.9 / 18K</strong>
+          <span>Đủ tuổi vàng & giấy kiểm định GIA</span>
+        </div>
+        <div class="hero-stat">
+          <strong>Minh bạch</strong>
+          <span>Giá bán tính tự động theo % lợi nhuận chuẩn</span>
+        </div>
+        <div class="hero-stat">
+          <strong>Đặt giữ online</strong>
+          <span>Trừ kho tức thì, nhận tại quầy hoặc giao tận nơi</span>
+        </div>
+        <div class="hero-stat">
+          <strong>Bảo hành & Dịch vụ</strong>
+          <span>Đánh bóng, khắc chữ, xi mạ, chỉnh size</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <section class="section">
+    <div class="section-head">
+      <h2>Danh mục sản phẩm</h2>
+      <a href="{{ url_for('shop.products') }}" style="color:var(--gold-600);font-weight:600;">Xem tất cả →</a>
+    </div>
+    <div class="cat-grid">
+      {% for c in categories %}
+        <a class="cat-card" href="{{ url_for('shop.products', loai=c.MaLoaiSP) }}">
+          <img src="{{ url_for('static', filename=c.HinhAnh or 'img/products/gem.svg') }}" alt="{{ c.TenLoaiSP }}">
+          <div style="font-weight:700;">{{ c.TenLoaiSP }}</div>
+          <div style="font-size:0.8rem;color:var(--slate-500);">{{ c.SoSP }} sản phẩm</div>
+        </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head">
+      <h2>Sản phẩm nổi bật</h2>
+      <a href="{{ url_for('shop.products') }}" style="color:var(--gold-600);font-weight:600;">Xem toàn bộ →</a>
+    </div>
+    <div class="product-grid">
+      {% for p in featured %}
+        <div class="product-card">
+          <a class="product-thumb" href="{{ url_for('shop.product_detail', ma_sp=p.MaSP) }}">
+            <span class="badge badge-gold product-cat">{{ p.TenLoaiSP }}</span>
+            <img src="{{ product_img(p) }}" alt="{{ p.TenSP }}">
+          </a>
+          <div class="product-body">
+            <a class="product-title" href="{{ url_for('shop.product_detail', ma_sp=p.MaSP) }}">{{ p.TenSP }}</a>
+            <div class="product-price">{{ p.DonGiaBan|vnd }} <span style="font-size:0.8rem;font-weight:500;color:var(--slate-500);">/ {{ p.TenDVT }}</span></div>
+            <div class="product-meta">Còn {{ p.SoLuongTon }} {{ p.TenDVT }} trong kho</div>
+            <form class="product-actions" action="{{ url_for('shop.cart_add') }}" method="post">
+              <input type="hidden" name="MaSP" value="{{ p.MaSP }}">
+              <input type="hidden" name="SoLuong" value="1">
+              <button type="submit" class="btn btn-outline btn-sm" style="flex:1;">+ Giỏ hàng</button>
+              <button type="submit" name="buy_now" value="1" class="btn btn-primary btn-sm" style="flex:1;">Mua ngay</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="card" style="background:linear-gradient(135deg,#fffdf8,#f8edd0);">
+      <div class="section-head" style="margin-bottom:10px;">
+        <div>
+          <h2 style="margin:0;">Dịch vụ kim hoàn & chăm sóc trang sức</h2>
+          <p style="margin:4px 0 0;color:var(--slate-500);">Nhận gia công, làm mới, khắc chữ, gắn đá với phiếu hẹn rõ ràng.</p>
+        </div>
+        <a class="btn btn-dark" href="{{ url_for('shop.dich_vu') }}">Xem chi tiết dịch vụ</a>
+      </div>
+      <div class="form-grid" style="margin-top:12px;">
+        {% for s in services %}
+          <div style="background:#fff;padding:12px 14px;border-radius:10px;border:1px solid #eadfca;">
+            <div style="font-weight:700;">{{ s.TenLoaiDV }}</div>
+            <div style="color:var(--gold-600);font-weight:700;">{{ s.DonGia|vnd }}</div>
+            <div style="font-size:0.8rem;color:var(--slate-500);">Trả trước tối thiểu {{ s.PhanTramTraTruoc|plain }}%</div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

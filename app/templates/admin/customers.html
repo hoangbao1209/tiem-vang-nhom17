@@ -1,0 +1,55 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>Danh sách Khách hàng</h1>
+</div>
+
+<div class="card">
+  <form method="post" style="display:grid;grid-template-columns:1.2fr 1fr 1.4fr 1.2fr auto;gap:10px;margin-bottom:16px;">
+    <input type="text" name="TenKH" required placeholder="Họ tên khách hàng mới...">
+    <input type="text" name="SoDienThoai" placeholder="Số điện thoại">
+    <input type="text" name="DiaChi" placeholder="Địa chỉ">
+    <input type="email" name="Email" placeholder="Email">
+    <button type="submit" class="btn btn-primary">+ Thêm KH</button>
+  </form>
+
+  <form method="get" style="display:flex;gap:8px;margin-bottom:14px;">
+    <input type="text" name="q" value="{{ q }}" placeholder="Tìm theo tên hoặc SĐT..." style="max-width:280px;">
+    <button type="submit" class="btn btn-dark btn-sm">Tìm</button>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Mã</th>
+        <th>Họ tên</th>
+        <th>Số điện thoại</th>
+        <th>Địa chỉ</th>
+        <th class="text-center">Đơn mua</th>
+        <th class="text-right">Tổng chi tiêu</th>
+        <th class="text-center">Phiếu DV</th>
+        <th class="text-right">Lưu</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+        <tr>
+          <form method="post">
+            <input type="hidden" name="MaKH" value="{{ r.MaKH }}">
+            <td>#{{ r.MaKH }}</td>
+            <td><input type="text" name="TenKH" value="{{ r.TenKH }}" required></td>
+            <td><input type="text" name="SoDienThoai" value="{{ r.SoDienThoai or '' }}"></td>
+            <td><input type="text" name="DiaChi" value="{{ r.DiaChi or '' }}"></td>
+            <td class="text-center">{{ r.SoDonBan }}</td>
+            <td class="text-right" style="font-weight:700;color:var(--gold-600);">{{ r.TongMua|vnd }}</td>
+            <td class="text-center">{{ r.SoPhieuDV }}</td>
+            <td class="text-right">
+              <button type="submit" class="btn btn-outline btn-sm">Lưu</button>
+            </td>
+          </form>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>QĐ1 – Quản lý Loại sản phẩm & Đơn vị tính</h1>
+    <div style="color:var(--slate-500);font-size:0.9rem;">Thay đổi danh sách loại sản phẩm, đơn vị tính và tỷ lệ phần trăm lợi nhuận của từng loại.</div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1.4fr 1fr;gap:20px;">
+  <div class="card">
+    <h3 class="card-title">Danh sách Loại sản phẩm</h3>
+    <form method="post" style="display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;margin-bottom:14px;">
+      <input type="hidden" name="action" value="save_cat">
+      <input type="text" name="TenLoaiSP" required placeholder="Tên loại SP mới...">
+      <select name="MaDVT" required>
+        {% for u in units %}
+          <option value="{{ u.MaDVT }}">{{ u.TenDVT }}</option>
+        {% endfor %}
+      </select>
+      <input type="number" name="PhanTramLoiNhuan" step="0.5" min="0" required placeholder="% lợi nhuận">
+      <button type="submit" class="btn btn-primary">+ Thêm</button>
+    </form>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Tên loại sản phẩm</th>
+          <th>ĐVT</th>
+          <th>% Lợi nhuận</th>
+          <th class="text-center">Số SP</th>
+          <th class="text-right">Cập nhật / Xóa</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in categories %}
+          <tr>
+            <form method="post">
+              <input type="hidden" name="action" value="save_cat">
+              <input type="hidden" name="MaLoaiSP" value="{{ c.MaLoaiSP }}">
+              <td><input type="text" name="TenLoaiSP" value="{{ c.TenLoaiSP }}" required></td>
+              <td>
+                <select name="MaDVT">
+                  {% for u in units %}
+                    <option value="{{ u.MaDVT }}" {{ 'selected' if u.MaDVT == c.MaDVT else '' }}>{{ u.TenDVT }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td><input type="number" name="PhanTramLoiNhuan" value="{{ c.PhanTramLoiNhuan|plain }}" step="0.5" min="0" style="width:90px;"></td>
+              <td class="text-center">{{ c.SoSP }}</td>
+              <td class="text-right" style="white-space:nowrap;">
+                <button type="submit" class="btn btn-outline btn-sm">Lưu</button>
+                <button type="submit" name="action" value="delete_cat" class="btn btn-danger btn-sm" onclick="return confirm('Xóa loại sản phẩm này?');">Xóa</button>
+              </td>
+            </form>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Đơn vị tính</h3>
+    <form method="post" style="display:flex;gap:8px;margin-bottom:14px;">
+      <input type="hidden" name="action" value="save_unit">
+      <input type="text" name="TenDVT" required placeholder="Tên ĐVT mới (VD: Bộ, Cây)...">
+      <button type="submit" class="btn btn-primary">+ Thêm</button>
+    </form>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Tên ĐVT</th>
+          <th class="text-center">Số loại dùng</th>
+          <th class="text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in units %}
+          <tr>
+            <form method="post">
+              <input type="hidden" name="action" value="save_unit">
+              <input type="hidden" name="MaDVT" value="{{ u.MaDVT }}">
+              <td><input type="text" name="TenDVT" value="{{ u.TenDVT }}" required></td>
+              <td class="text-center">{{ u.SoLoai }}</td>
+              <td class="text-right" style="white-space:nowrap;">
+                <button type="submit" class="btn btn-outline btn-sm">Lưu</button>
+                <button type="submit" name="action" value="delete_unit" class="btn btn-danger btn-sm" onclick="return confirm('Xóa ĐVT này?');">Xóa</button>
+              </td>
+            </form>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

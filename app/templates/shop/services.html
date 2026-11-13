@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Bảng giá dịch vụ kim hoàn – {{ store.TenCuaHang }}{% endblock %}
+{% block content %}
+<div class="container section">
+  <div class="card">
+    <h1 style="margin-top:0;">Bảng giá dịch vụ chế tác & chăm sóc trang sức</h1>
+    <p style="color:var(--slate-500);">Quý khách mang trang sức đến trực tiếp cửa hàng <strong>{{ store.TenCuaHang }}</strong> ({{ store.DiaChi }}) để được nhân viên kiểm tra và lập <strong>Phiếu dịch vụ (BM3)</strong>.</p>
+
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>STT</th>
+            <th>Tên loại dịch vụ</th>
+            <th class="text-right">Đơn giá chuẩn</th>
+            <th class="text-center">Tỷ lệ trả trước tối thiểu</th>
+            <th>Ghi chú tính phí (QĐ3)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in services %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td><strong>{{ s.TenLoaiDV }}</strong></td>
+              <td class="text-right" style="color:var(--gold-600);font-weight:700;">{{ s.DonGia|vnd }}</td>
+              <td class="text-center"><span class="badge badge-gold">{{ s.PhanTramTraTruoc|plain }}%</span></td>
+              <td style="font-size:0.86rem;color:var(--slate-500);">Đơn giá được tính = Đơn giá chuẩn + Chi phí riêng (nếu phát sinh phụ liệu)</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<div class="page-header no-print">
+  <h1>BM1 – Chi tiết Phiếu mua hàng #{{ p.SoPhieu }}</h1>
+  <div style="display:flex;gap:8px;">
+    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ In phiếu</button>
+    <a class="btn btn-primary" href="{{ url_for('admin.purchase_create') }}">+ Lập phiếu mới</a>
+    <a class="btn btn-outline" href="{{ url_for('admin.purchases') }}">← Danh sách</a>
+  </div>
+</div>
+
+<div class="card">
+  <div style="text-align:center;border-bottom:2px solid #eadfca;padding-bottom:14px;margin-bottom:16px;">
+    <div style="font-weight:800;font-size:1.1rem;">{{ store.TenCuaHang }}</div>
+    <h2 style="margin:6px 0;">PHIẾU MUA HÀNG (BM1)</h2>
+    <div>Số phiếu: <strong>#{{ p.SoPhieu }}</strong> — Ngày lập: <strong>{{ p.NgayLap|date }}</strong></div>
+  </div>
+
+  <div class="form-grid" style="margin-bottom:16px;">
+    <div><strong>Nhà cung cấp:</strong> {{ p.TenNCC }}</div>
+    <div><strong>Điện thoại:</strong> {{ p.SoDienThoai or '—' }}</div>
+    <div><strong>Địa chỉ:</strong> {{ p.DiaChi or '—' }}</div>
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>STT</th>
+        <th>Sản phẩm</th>
+        <th>Loại sản phẩm</th>
+        <th>Đơn vị tính</th>
+        <th class="text-center">Số lượng</th>
+        <th class="text-right">Đơn giá mua</th>
+        <th class="text-right">Thành tiền</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for l in lines %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td><strong>{{ l.TenSP }}</strong></td>
+          <td>{{ l.TenLoaiSP }}</td>
+          <td>{{ l.TenDVT }}</td>
+          <td class="text-center">{{ l.SoLuong }}</td>
+          <td class="text-right">{{ l.DonGia|vnd }}</td>
+          <td class="text-right" style="font-weight:700;">{{ l.ThanhTien|vnd }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <th colspan="6" class="text-right">Tổng tiền:</th>
+        <th class="text-right" style="font-size:1.2rem;color:var(--gold-600);">{{ p.TongTien|vnd }}</th>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+{% endblock %}

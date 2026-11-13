@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ store.TenCuaHang }} – Vàng Bạc Đá Quý{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="topbar">
+    <div class="container topbar-inner">
+      <div>📍 {{ store.DiaChi }} &nbsp;|&nbsp; ☎️ {{ store.SoDienThoai }}</div>
+      <div>
+        <a href="{{ url_for('shop.order_lookup') }}">Tra cứu đơn hàng</a>
+        &nbsp;•&nbsp;
+        {% if g.user %}
+          <a href="{{ url_for('admin.dashboard') }}">Quản lý cửa hàng ({{ g.user.HoTen }})</a>
+          &nbsp;•&nbsp;
+          <a href="{{ url_for('auth.logout') }}">Đăng xuất</a>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}">Đăng nhập quản lý</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="container header-main">
+      <a class="brand" href="{{ url_for('shop.index') }}">
+        <div class="brand-mark">KN</div>
+        <div>
+          <div class="brand-title">{{ store.TenCuaHang }}</div>
+          <div class="brand-sub">Vàng bạc • Đá quý • Chế tác trang sức</div>
+        </div>
+      </a>
+
+      <form class="search-box" action="{{ url_for('shop.products') }}" method="get">
+        <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="Tìm nhẫn vàng, dây chuyền, kim cương...">
+        <button type="submit">Tìm kiếm</button>
+      </form>
+
+      <div class="header-actions">
+        <a class="cart-pill" href="{{ url_for('shop.cart') }}">
+          🛒 Giỏ hàng <span class="cart-badge">{{ cart_count }}</span>
+        </a>
+      </div>
+    </div>
+
+    <nav class="nav-bar">
+      <div class="container nav-links">
+        <a href="{{ url_for('shop.index') }}" class="{{ 'active' if request.endpoint == 'shop.index' else '' }}">Trang chủ</a>
+        <a href="{{ url_for('shop.products') }}" class="{{ 'active' if request.endpoint == 'shop.products' and not request.args.get('loai') else '' }}">Tất cả sản phẩm</a>
+        {% for c in nav_categories %}
+          <a href="{{ url_for('shop.products', loai=c.MaLoaiSP) }}"
+             class="{{ 'active' if request.args.get('loai')|int == c.MaLoaiSP else '' }}">{{ c.TenLoaiSP }}</a>
+        {% endfor %}
+        <a href="{{ url_for('shop.dich_vu') }}" class="{{ 'active' if request.endpoint == 'shop.dich_vu' else '' }}">Bảng giá dịch vụ</a>
+        <a href="{{ url_for('shop.order_lookup') }}" class="{{ 'active' if request.endpoint == 'shop.order_lookup' else '' }}">Tra cứu đơn</a>
+      </div>
+    </nav>
+  </header>
+
+  <main style="flex:1;">
+    <div class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-list">
+            {% for cat, msg in messages %}
+              <div class="alert alert-{{ cat }}">{{ msg }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+    </div>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <h4>{{ store.TenCuaHang }}</h4>
+        <p>Hệ thống kinh doanh & quản lý vàng bạc đá quý (Đồ án Nhập môn Công nghệ Phần mềm – SE104.R11 – Nhóm 17).</p>
+        <p>📍 {{ store.DiaChi }}<br>☎️ {{ store.SoDienThoai }} – ✉️ {{ store.Email }}</p>
+      </div>
+      <div>
+        <h4>Danh mục trang sức</h4>
+        {% for c in nav_categories[:5] %}
+          <div><a href="{{ url_for('shop.products', loai=c.MaLoaiSP) }}">• {{ c.TenLoaiSP }}</a></div>
+        {% endfor %}
+      </div>
+      <div>
+        <h4>Hỗ trợ & Quản lý</h4>
+        <div><a href="{{ url_for('shop.dich_vu') }}">• Dịch vụ gia công & bảo hành</a></div>
+        <div><a href="{{ url_for('shop.order_lookup') }}">• Tra cứu phiếu bán / đơn hàng</a></div>
+        <div><a href="{{ url_for('admin.dashboard') }}">• Phân hệ quản lý cửa hàng</a></div>
+      </div>
+    </div>
+  </footer>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

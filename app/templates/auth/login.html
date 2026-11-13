@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Đăng nhập quản lý – {{ store.TenCuaHang }}{% endblock %}
+{% block content %}
+<div class="container section">
+  <div class="card" style="max-width:440px;margin:28px auto;padding:28px;">
+    <h2 style="margin-top:0;">Đăng nhập quản lý</h2>
+    <p style="color:var(--slate-500);font-size:0.9rem;">Dành cho quản trị viên và nhân viên cửa hàng.</p>
+    <form method="post">
+      <div class="form-group">
+        <label>Tên đăng nhập</label>
+        <input type="text" name="TenDangNhap" required autofocus placeholder="admin hoặc nhanvien">
+      </div>
+      <div class="form-group">
+        <label>Mật khẩu</label>
+        <input type="password" name="MatKhau" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:8px;">Đăng nhập</button>
+    </form>
+    <div style="margin-top:18px;padding:12px;border-radius:8px;background:var(--gold-50);font-size:0.84rem;">
+      <strong>Tài khoản demo có sẵn:</strong><br>
+      • Quản trị viên: <code>admin</code> / <code>admin123</code><br>
+      • Nhân viên: <code>nhanvien</code> / <code>nhanvien123</code>
+    </div>
+  </div>
+</div>
+{% endblock %}

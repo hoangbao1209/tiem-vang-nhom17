@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ current_cat.TenLoaiSP if current_cat else 'Danh sách sản phẩm' }} – {{ store.TenCuaHang }}{% endblock %}
+{% block content %}
+<div class="container section">
+  <div class="section-head">
+    <div>
+      <h2>{{ current_cat.TenLoaiSP if current_cat else 'Tất cả sản phẩm' }}</h2>
+      <div style="color:var(--slate-500);font-size:0.9rem;">Tìm thấy {{ products|length }} sản phẩm</div>
+    </div>
+
+    <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <input type="text" name="q" value="{{ q }}" placeholder="Từ khóa..." style="width:190px;">
+      <select name="loai" style="width:170px;" onchange="this.form.submit()">
+        <option value="">-- Tất cả loại --</option>
+        {% for c in nav_categories %}
+          <option value="{{ c.MaLoaiSP }}" {{ 'selected' if loai == c.MaLoaiSP else '' }}>{{ c.TenLoaiSP }}</option>
+        {% endfor %}
+      </select>
+      <select name="sort" style="width:160px;" onchange="this.form.submit()">
+        {% for k, label in sorts %}
+          <option value="{{ k }}" {{ 'selected' if sort == k else '' }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <label style="display:flex;align-items:center;gap:5px;font-size:0.88rem;">
+        <input type="checkbox" name="con_hang" value="1" {{ 'checked' if con_hang else '' }} onchange="this.form.submit()">
+        Chỉ hiện còn hàng
+      </label>
+      <button type="submit" class="btn btn-dark btn-sm">Lọc</button>
+    </form>
+  </div>
+
+  {% if products %}
+    <div class="product-grid">
+      {% for p in products %}
+        <div class="product-card">
+          <a class="product-thumb" href="{{ url_for('shop.product_detail', ma_sp=p.MaSP) }}">
+            <span class="badge badge-gold product-cat">{{ p.TenLoaiSP }}</span>
+            <img src="{{ product_img(p) }}" alt="{{ p.TenSP }}">
+          </a>
+          <div class="product-body">
+            <a class="product-title" href="{{ url_for('shop.product_detail', ma_sp=p.MaSP) }}">{{ p.TenSP }}</a>
+            <div class="product-price">{{ p.DonGiaBan|vnd }} <span style="font-size:0.8rem;font-weight:500;color:var(--slate-500);">/ {{ p.TenDVT }}</span></div>
+            <div class="product-meta">
+              {% if p.SoLuongTon > 0 %}
+                <span class="badge badge-success">Còn {{ p.SoLuongTon }} {{ p.TenDVT }}</span>
+              {% else %}
+                <span class="badge badge-danger">Tạm hết hàng</span>
+              {% endif %}
+            </div>
+            {% if p.SoLuongTon > 0 %}
+              <form class="product-actions" action="{{ url_for('shop.cart_add') }}" method="post">
+                <input type="hidden" name="MaSP" value="{{ p.MaSP }}">
+                <input type="hidden" name="SoLuong" value="1">
+                <button type="submit" class="btn btn-outline btn-sm" style="flex:1;">+ Giỏ hàng</button>
+                <button type="submit" name="buy_now" value="1" class="btn btn-primary btn-sm" style="flex:1;">Mua ngay</button>
+              </form>
+            {% else %}
+              <a class="btn btn-outline btn-sm" href="{{ url_for('shop.product_detail', ma_sp=p.MaSP) }}">Xem chi tiết</a>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card text-center" style="padding:36px;">
+      <p>Không tìm thấy sản phẩm phù hợp.</p>
+      <a class="btn btn-outline" href="{{ url_for('shop.products') }}">Xóa bộ lọc</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

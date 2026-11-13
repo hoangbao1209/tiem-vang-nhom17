@@ -1,0 +1,58 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ 'Cập nhật sản phẩm #' ~ sp.MaSP if sp else 'Thêm sản phẩm mới' }}</h1>
+  <a class="btn btn-outline" href="{{ url_for('admin.products_admin') }}">← Danh sách sản phẩm</a>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="card" style="max-width:760px;">
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Tên sản phẩm *</label>
+      <input type="text" name="TenSP" value="{{ sp.TenSP if sp else '' }}" required placeholder="Ví dụ: Nhẫn vàng 18K đính đá...">
+    </div>
+    <div class="form-group">
+      <label>Loại sản phẩm *</label>
+      <select name="MaLoaiSP" required>
+        <option value="">-- Chọn loại sản phẩm --</option>
+        {% for c in categories %}
+          <option value="{{ c.MaLoaiSP }}" {{ 'selected' if sp and sp.MaLoaiSP == c.MaLoaiSP else '' }}>
+            {{ c.TenLoaiSP }} (ĐVT: {{ c.TenDVT }} — Lợi nhuận: {{ c.PhanTramLoiNhuan|plain }}%)
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Đơn giá mua gần nhất (₫)</label>
+      <input type="number" name="DonGiaMua" value="{{ sp.DonGiaMua|plain if sp else 0 }}" min="0" step="1000">
+    </div>
+    <div class="form-group">
+      <label>Hình minh họa có sẵn</label>
+      <select name="HinhAnhChon">
+        {% for path, label in stock_images %}
+          <option value="{{ path }}" {{ 'selected' if sp and sp.HinhAnh == path else '' }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Hoặc tải ảnh sản phẩm từ máy (png, jpg, webp)</label>
+    <input type="file" name="HinhAnhFile" accept=".png,.jpg,.jpeg,.gif,.webp">
+  </div>
+
+  <div class="form-group">
+    <label>Mô tả sản phẩm</label>
+    <textarea name="MoTa" rows="3" placeholder="Chất liệu, trọng lượng, giấy kiểm định...">{{ sp.MoTa if sp and sp.MoTa else '' }}</textarea>
+  </div>
+
+  <div class="form-group">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+      <input type="checkbox" name="HienThi" value="1" {{ 'checked' if not sp or sp.HienThi else '' }} style="width:auto;">
+      Hiển thị sản phẩm trên trang bán hàng cho khách
+    </label>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Lưu sản phẩm</button>
+</form>
+{% endblock %}

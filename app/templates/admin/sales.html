@@ -1,0 +1,90 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>BM2 – Danh sách Phiếu bán hàng & Đơn Online</h1>
+    <div style="color:var(--slate-500);font-size:0.9rem;">Quản lý hóa đơn bán tại quầy và đơn khách đặt qua website.</div>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('admin.sale_create') }}">+ Lập phiếu bán hàng</a>
+</div>
+
+<div class="card">
+  <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:16px;">
+    <div class="form-group" style="margin:0;">
+      <label>Khách hàng / SĐT / Số phiếu</label>
+      <input type="text" name="q" value="{{ q }}" placeholder="Tên, SĐT hoặc số phiếu...">
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label>Nguồn</label>
+      <select name="nguon">
+        <option value="">Tất cả</option>
+        <option value="Tại quầy" {{ 'selected' if nguon == 'Tại quầy' else '' }}>Tại quầy</option>
+        <option value="Online" {{ 'selected' if nguon == 'Online' else '' }}>Online</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label>Trạng thái</label>
+      <select name="trang_thai">
+        <option value="">Tất cả</option>
+        <option value="Chờ xử lý" {{ 'selected' if trang_thai == 'Chờ xử lý' else '' }}>Chờ xử lý</option>
+        <option value="Hoàn tất" {{ 'selected' if trang_thai == 'Hoàn tất' else '' }}>Hoàn tất</option>
+        <option value="Đã hủy" {{ 'selected' if trang_thai == 'Đã hủy' else '' }}>Đã hủy</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label>Từ ngày</label>
+      <input type="date" name="tu_ngay" value="{{ tu_ngay }}">
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label>Đến ngày</label>
+      <input type="date" name="den_ngay" value="{{ den_ngay }}">
+    </div>
+    <button type="submit" class="btn btn-dark">Tra cứu</button>
+    <a class="btn btn-outline" href="{{ url_for('admin.sales') }}">Đặt lại</a>
+  </form>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Số phiếu</th>
+          <th>Ngày lập</th>
+          <th>Khách hàng</th>
+          <th>Nguồn</th>
+          <th>Trạng thái</th>
+          <th class="text-right">Tổng tiền</th>
+          <th class="text-right">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+          <tr>
+            <td><strong>#{{ r.SoPhieu }}</strong></td>
+            <td>{{ r.NgayLap|date }}</td>
+            <td>{{ r.TenKH }}<br><small style="color:var(--slate-500);">{{ r.SoDienThoai or '' }}</small></td>
+            <td><span class="badge {{ 'badge-info' if r.Nguon == 'Online' else 'badge-gold' }}">{{ r.Nguon }}</span></td>
+            <td>
+              <span class="badge {{ 'badge-success' if r.TrangThai == 'Hoàn tất' else ('badge-danger' if r.TrangThai == 'Đã hủy' else 'badge-warning') }}">
+                {{ r.TrangThai }}
+              </span>
+            </td>
+            <td class="text-right" style="font-weight:700;color:var(--gold-600);">{{ r.TongTien|vnd }}</td>
+            <td class="text-right">
+              <a class="btn btn-outline btn-sm" href="{{ url_for('admin.sale_detail', so_phieu=r.SoPhieu) }}">Xem phiếu</a>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="7" class="text-center">Chưa có phiếu bán hàng nào.</td></tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="5" class="text-right">Tổng doanh thu hợp lệ:</th>
+          <th class="text-right" style="color:var(--gold-600);font-size:1.1rem;">{{ tong|vnd }}</th>
+          <th></th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<div class="page-header no-print">
+  <h1>BM3 – Chi tiết Phiếu dịch vụ #{{ p.SoPhieu }}</h1>
+  <div style="display:flex;gap:8px;">
+    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ In phiếu</button>
+    <a class="btn btn-primary" href="{{ url_for('admin.service_create') }}">+ Lập phiếu mới</a>
+    <a class="btn btn-outline" href="{{ url_for('admin.services_vouchers') }}">← Danh sách</a>
+  </div>
+</div>
+
+<div class="card">
+  <div style="text-align:center;border-bottom:2px solid #eadfca;padding-bottom:14px;margin-bottom:16px;">
+    <div style="font-weight:800;font-size:1.1rem;">{{ store.TenCuaHang }}</div>
+    <h2 style="margin:6px 0;">PHIẾU DỊCH VỤ (BM3)</h2>
+    <div>
+      Số phiếu: <strong>#{{ p.SoPhieu }}</strong> — Ngày lập: <strong>{{ p.NgayLap|date }}</strong> —
+      Tình trạng phiếu: <span class="badge {{ 'badge-success' if p.TinhTrang == 'Hoàn thành' else 'badge-warning' }}">{{ p.TinhTrang }}</span>
+    </div>
+  </div>
+
+  <div class="form-grid" style="margin-bottom:16px;">
+    <div><strong>Khách hàng:</strong> {{ p.TenKH }}</div>
+    <div><strong>Số điện thoại:</strong> {{ p.SoDienThoai or '—' }}</div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>STT</th>
+          <th>Loại dịch vụ</th>
+          <th class="text-right">Đơn giá DV</th>
+          <th class="text-right">Chi phí riêng</th>
+          <th class="text-right">Đơn giá được tính</th>
+          <th class="text-center">SL</th>
+          <th class="text-right">Thành tiền</th>
+          <th class="text-right">Trả trước</th>
+          <th class="text-right">Còn lại</th>
+          <th>Ngày giao</th>
+          <th>Tình trạng</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in lines %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td><strong>{{ l.TenLoaiDV }}</strong></td>
+            <td class="text-right">{{ l.DonGiaDichVu|vnd }}</td>
+            <td class="text-right">{{ l.ChiPhiRieng|vnd }}</td>
+            <td class="text-right">{{ l.DonGiaDuocTinh|vnd }}</td>
+            <td class="text-center">{{ l.SoLuong }}</td>
+            <td class="text-right" style="font-weight:700;">{{ l.ThanhTien|vnd }}</td>
+            <td class="text-right">{{ l.TraTruoc|vnd }}</td>
+            <td class="text-right">{{ l.ConLai|vnd }}</td>
+            <td>{{ l.NgayGiao|date }}</td>
+            <td>
+              {% if l.TinhTrang == 'Đã giao' %}
+                <span class="badge badge-success">Đã giao</span>
+              {% else %}
+                <form action="{{ url_for('admin.service_deliver_line', ma_ct=l.MaCT) }}" method="post" style="display:inline;">
+                  <button type="submit" class="btn btn-primary btn-sm no-print">Xác nhận giao</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="6" class="text-right">Tổng cộng:</th>
+          <th class="text-right" style="color:var(--gold-600);">{{ p.TongTien|vnd }}</th>
+          <th class="text-right">{{ p.TongTraTruoc|vnd }}</th>
+          <th class="text-right">{{ p.TongConLai|vnd }}</th>
+          <th colspan="2"></th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+{% endblock %}
