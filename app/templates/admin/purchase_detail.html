@@ -1,7 +1,7 @@
 {% extends "admin/base_admin.html" %}
 {% block content %}
 <div class="page-header no-print">
-  <h1>BM1 – Chi tiết Phiếu mua hàng #{{ p.SoPhieu }}</h1>
+  <h1>Chi tiết Phiếu mua hàng #{{ p.SoPhieu }}</h1>
   <div style="display:flex;gap:8px;">
     <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ In phiếu</button>
     <a class="btn btn-primary" href="{{ url_for('admin.purchase_create') }}">+ Lập phiếu mới</a>
@@ -12,21 +12,25 @@
 <div class="card">
   <div style="text-align:center;border-bottom:2px solid #eadfca;padding-bottom:14px;margin-bottom:16px;">
     <div style="font-weight:800;font-size:1.1rem;">{{ store.TenCuaHang }}</div>
-    <h2 style="margin:6px 0;">PHIẾU MUA HÀNG (BM1)</h2>
+    <h2 style="margin:6px 0;">PHIẾU MUA HÀNG</h2>
     <div>Số phiếu: <strong>#{{ p.SoPhieu }}</strong> — Ngày lập: <strong>{{ p.NgayLap|date }}</strong></div>
   </div>
 
   <div class="form-grid" style="margin-bottom:16px;">
-    <div><strong>Nhà cung cấp:</strong> {{ p.TenNCC }}</div>
+    <div><strong>Mã nhà cung cấp:</strong> NCC{{ '%03d'|format(p.MaNCC) }}</div>
+    <div><strong>Tên nhà cung cấp:</strong> {{ p.TenNCC }}</div>
     <div><strong>Điện thoại:</strong> {{ p.SoDienThoai or '—' }}</div>
     <div><strong>Địa chỉ:</strong> {{ p.DiaChi or '—' }}</div>
+    <div><strong>Nhân viên lập phiếu:</strong> {{ p.NguoiLap or '—' }}</div>
+    <div><strong>Ghi chú:</strong> {{ p.GhiChu or '—' }}</div>
   </div>
 
   <table class="table">
     <thead>
       <tr>
         <th>STT</th>
-        <th>Sản phẩm</th>
+        <th>Mã SP</th>
+        <th>Tên sản phẩm</th>
         <th>Loại sản phẩm</th>
         <th>Đơn vị tính</th>
         <th class="text-center">Số lượng</th>
@@ -38,6 +42,7 @@
       {% for l in lines %}
         <tr>
           <td>{{ loop.index }}</td>
+          <td>{{ l.MaCode or ('SP' ~ l.MaSP) }}</td>
           <td><strong>{{ l.TenSP }}</strong></td>
           <td>{{ l.TenLoaiSP }}</td>
           <td>{{ l.TenDVT }}</td>
@@ -49,7 +54,7 @@
     </tbody>
     <tfoot>
       <tr>
-        <th colspan="6" class="text-right">Tổng tiền:</th>
+        <th colspan="7" class="text-right">Tổng tiền phiếu mua:</th>
         <th class="text-right" style="font-size:1.2rem;color:var(--gold-600);">{{ p.TongTien|vnd }}</th>
       </tr>
     </tfoot>

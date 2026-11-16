@@ -3,15 +3,15 @@
 {% block content %}
 <div class="container section">
   <div class="card" style="max-width:760px;margin:0 auto;">
-    <h1 style="margin-top:0;">Tra cứu phiếu bán / đơn đặt hàng</h1>
+    <h1 style="margin-top:0;">Tra cứu đơn đặt hàng & hóa đơn</h1>
     <form method="get" style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:20px;">
       <div class="form-group" style="margin:0;">
-        <label>Số phiếu bán hàng</label>
-        <input type="number" name="so_phieu" value="{{ so_phieu }}" required placeholder="Ví dụ: 4">
+        <label>Mã đơn hàng / Số phiếu</label>
+        <input type="number" name="so_phieu" value="{{ so_phieu }}" required placeholder="Nhập mã đơn hàng...">
       </div>
       <div class="form-group" style="margin:0;">
         <label>Số điện thoại khách hàng</label>
-        <input type="text" name="sdt" value="{{ sdt }}" required placeholder="Ví dụ: 0938777888">
+        <input type="text" name="sdt" value="{{ sdt }}" required placeholder="Nhập số điện thoại...">
       </div>
       <button type="submit" class="btn btn-primary">Tra cứu</button>
     </form>
@@ -19,9 +19,9 @@
     {% if searched %}
       {% if p %}
         <div style="background:var(--gold-50);padding:14px;border-radius:10px;margin-bottom:14px;">
-          <div><strong>Phiếu bán hàng #{{ p.SoPhieu }}</strong> ({{ p.Nguon }}) — Ngày lập: {{ p.NgayLap|date }}</div>
+          <div><strong>Đơn hàng #{{ p.SoPhieu }}</strong> ({{ p.Nguon }}) — Ngày lập: {{ p.NgayLap|date }}</div>
           <div>Khách hàng: <strong>{{ p.TenKH }}</strong> ({{ p.SoDienThoai }}) — Địa chỉ: {{ p.DiaChi or '—' }}</div>
-          <div>Trạng thái: <span class="badge {{ 'badge-success' if p.TrangThai == 'Hoàn tất' else ('badge-danger' if p.TrangThai == 'Đã hủy' else 'badge-warning') }}">{{ p.TrangThai }}</span></div>
+          <div>Thanh toán: <strong>{{ p.PhuongThucThanhToan }}</strong> — Trạng thái: <span class="badge {{ 'badge-success' if p.TrangThai == 'Hoàn tất' else ('badge-danger' if p.TrangThai == 'Đã hủy' else 'badge-warning') }}">{{ p.TrangThai }}</span></div>
         </div>
         <table class="table">
           <thead>
@@ -52,7 +52,7 @@
           </tfoot>
         </table>
       {% else %}
-        <div class="alert alert-error">Không tìm thấy phiếu bán hàng khớp với số phiếu và số điện thoại đã nhập.</div>
+        <div class="alert alert-error">Không tìm thấy đơn hàng khớp với mã đơn và số điện thoại đã nhập.</div>
       {% endif %}
     {% endif %}
   </div>

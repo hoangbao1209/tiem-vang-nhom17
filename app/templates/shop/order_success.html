@@ -5,14 +5,14 @@
   <div class="card" style="max-width:760px;margin:0 auto;">
     <div style="text-align:center;margin-bottom:20px;">
       <span class="badge badge-success" style="font-size:0.9rem;padding:6px 14px;">✓ Đặt hàng thành công</span>
-      <h1 style="margin:10px 0 4px;">Mã phiếu bán hàng: #{{ p.SoPhieu }}</h1>
-      <p style="color:var(--slate-500);margin:0;">Quý khách có thể dùng Số phiếu <strong>#{{ p.SoPhieu }}</strong> và SĐT <strong>{{ p.SoDienThoai }}</strong> để tra cứu trạng thái đơn hàng.</p>
+      <h1 style="margin:10px 0 4px;">Mã đơn hàng: #{{ p.SoPhieu }}</h1>
+      <p style="color:var(--slate-500);margin:0;">Quý khách có thể dùng Mã đơn <strong>#{{ p.SoPhieu }}</strong> và SĐT <strong>{{ p.SoDienThoai }}</strong> để tra cứu tình trạng xử lý.</p>
     </div>
 
     <div style="background:var(--gold-50);padding:14px;border-radius:10px;margin-bottom:16px;">
       <div><strong>Khách hàng:</strong> {{ p.TenKH }} — <strong>SĐT:</strong> {{ p.SoDienThoai }}</div>
       <div><strong>Địa chỉ:</strong> {{ p.DiaChi }}</div>
-      <div><strong>Ngày lập:</strong> {{ p.NgayLap|date }} — <strong>Trạng thái:</strong> <span class="badge badge-warning">{{ p.TrangThai }}</span></div>
+      <div><strong>Ngày đặt:</strong> {{ p.NgayLap|date }} — <strong>Thanh toán:</strong> {{ p.PhuongThucThanhToan }} — <strong>Trạng thái:</strong> <span class="badge badge-warning">{{ p.TrangThai }}</span></div>
     </div>
 
     <table class="table">

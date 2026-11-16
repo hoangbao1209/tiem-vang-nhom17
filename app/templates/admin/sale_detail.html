@@ -1,7 +1,7 @@
 {% extends "admin/base_admin.html" %}
 {% block content %}
 <div class="page-header no-print">
-  <h1>BM2 – Chi tiết Phiếu bán hàng #{{ p.SoPhieu }}</h1>
+  <h1>Chi tiết Phiếu bán hàng #{{ p.SoPhieu }}</h1>
   <div style="display:flex;gap:8px;flex-wrap:wrap;">
     {% if p.TrangThai == 'Chờ xử lý' %}
       <form action="{{ url_for('admin.sale_complete', so_phieu=p.SoPhieu) }}" method="post">
@@ -10,7 +10,7 @@
     {% endif %}
     {% if p.TrangThai != 'Đã hủy' %}
       <form action="{{ url_for('admin.sale_cancel', so_phieu=p.SoPhieu) }}" method="post" onsubmit="return confirm('Hủy phiếu này và hoàn lại số lượng tồn kho?');">
-        <button type="submit" class="btn btn-danger">Hủy phiếu & Hoàn kho</button>
+        <button type="submit" class="btn btn-danger">Hủy phiếu &amp; Hoàn kho</button>
       </form>
     {% endif %}
     <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ In phiếu</button>
@@ -21,7 +21,7 @@
 <div class="card">
   <div style="text-align:center;border-bottom:2px solid #eadfca;padding-bottom:14px;margin-bottom:16px;">
     <div style="font-weight:800;font-size:1.1rem;">{{ store.TenCuaHang }}</div>
-    <h2 style="margin:6px 0;">PHIẾU BÁN HÀNG (BM2)</h2>
+    <h2 style="margin:6px 0;">PHIẾU BÁN HÀNG</h2>
     <div>
       Số phiếu: <strong>#{{ p.SoPhieu }}</strong> — Ngày lập: <strong>{{ p.NgayLap|date }}</strong> —
       Nguồn: <strong>{{ p.Nguon }}</strong> — Trạng thái: <strong>{{ p.TrangThai }}</strong>
@@ -32,13 +32,17 @@
     <div><strong>Khách hàng:</strong> {{ p.TenKH }}</div>
     <div><strong>Số điện thoại:</strong> {{ p.SoDienThoai or '—' }}</div>
     <div><strong>Địa chỉ:</strong> {{ p.DiaChi or '—' }}</div>
+    <div><strong>Phương thức thanh toán:</strong> {{ p.PhuongThucThanhToan }}</div>
+    <div><strong>Nhân viên lập phiếu:</strong> {{ p.NguoiLap or 'Khách đặt Online' }}</div>
+    <div><strong>Ghi chú:</strong> {{ p.GhiChu or '—' }}</div>
   </div>
 
   <table class="table">
     <thead>
       <tr>
         <th>STT</th>
-        <th>Sản phẩm</th>
+        <th>Mã SP</th>
+        <th>Tên sản phẩm</th>
         <th>Loại sản phẩm</th>
         <th>Đơn vị tính</th>
         <th class="text-center">Số lượng</th>
@@ -50,6 +54,7 @@
       {% for l in lines %}
         <tr>
           <td>{{ loop.index }}</td>
+          <td>{{ l.MaCode or ('SP' ~ l.MaSP) }}</td>
           <td><strong>{{ l.TenSP }}</strong></td>
           <td>{{ l.TenLoaiSP }}</td>
           <td>{{ l.TenDVT }}</td>
@@ -61,8 +66,16 @@
     </tbody>
     <tfoot>
       <tr>
-        <th colspan="6" class="text-right">Tổng tiền:</th>
+        <th colspan="7" class="text-right">Tổng tiền thanh toán:</th>
         <th class="text-right" style="font-size:1.2rem;color:var(--gold-600);">{{ p.TongTien|vnd }}</th>
+      </tr>
+      <tr>
+        <td colspan="7" class="text-right">Số tiền đã nhận ({{ p.PhuongThucThanhToan }}):</td>
+        <td class="text-right" style="font-weight:600;">{{ p.SoTienNhan|vnd }}</td>
+      </tr>
+      <tr>
+        <td colspan="7" class="text-right">Tiền thừa trả khách:</td>
+        <td class="text-right" style="font-weight:600;">{{ p.TienThua|vnd }}</td>
       </tr>
     </tfoot>
   </table>

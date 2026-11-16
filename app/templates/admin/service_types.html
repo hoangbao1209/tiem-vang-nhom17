@@ -2,50 +2,69 @@
 {% block content %}
 <div class="page-header">
   <div>
-    <h1>QĐ3 – Quản lý Loại dịch vụ & Tỷ lệ trả trước</h1>
-    <div style="color:var(--slate-500);font-size:0.9rem;">Thay đổi các loại dịch vụ, đơn giá chuẩn và tỷ lệ phần trăm trả trước tối thiểu.</div>
+    <h1>Danh sách Dịch vụ kim hoàn</h1>
+    <div style="color:var(--slate-500);font-size:0.9rem;">
+      Quản lý tên dịch vụ, đơn giá cơ bản và trạng thái cung cấp. Tỷ lệ trả trước tối thiểu hệ thống hiện tại: <strong>{{ ti_le_tra_truoc|plain }}%</strong>
+      {% if g.user.VaiTro == 'admin' %}
+        (<a href="{{ url_for('admin.settings_admin') }}" style="color:var(--gold-600);text-decoration:underline;">Điều chỉnh tại Quy định</a>)
+      {% endif %}.
+    </div>
   </div>
 </div>
 
 <div class="card">
   <form method="post" style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;margin-bottom:16px;">
     <input type="hidden" name="action" value="save">
-    <input type="text" name="TenLoaiDV" required placeholder="Tên loại dịch vụ mới...">
-    <input type="number" name="DonGia" min="0" step="1000" required placeholder="Đơn giá chuẩn (₫)">
-    <input type="number" name="PhanTramTraTruoc" value="50" min="0" max="100" step="5" required placeholder="% trả trước">
+    <input type="text" name="TenLoaiDV" required placeholder="Tên dịch vụ mới...">
+    <input type="number" name="DonGia" min="0" step="1" required placeholder="Đơn giá cơ bản (₫)">
+    <select name="TinhTrang">
+      <option value="Đang hoạt động">Đang hoạt động</option>
+      <option value="Ngừng hoạt động">Ngừng hoạt động</option>
+    </select>
     <button type="submit" class="btn btn-primary">+ Thêm dịch vụ</button>
   </form>
 
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Mã</th>
-        <th>Tên loại dịch vụ</th>
-        <th>Đơn giá chuẩn (₫)</th>
-        <th>% Trả trước tối thiểu</th>
-        <th class="text-center">Số lần sử dụng</th>
-        <th class="text-right">Thao tác</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for r in rows %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
         <tr>
-          <form method="post">
-            <input type="hidden" name="action" value="save">
-            <input type="hidden" name="MaLoaiDV" value="{{ r.MaLoaiDV }}">
-            <td>#{{ r.MaLoaiDV }}</td>
-            <td><input type="text" name="TenLoaiDV" value="{{ r.TenLoaiDV }}" required></td>
-            <td><input type="number" name="DonGia" value="{{ r.DonGia|plain }}" min="0" step="1000" required></td>
-            <td><input type="number" name="PhanTramTraTruoc" value="{{ r.PhanTramTraTruoc|plain }}" min="0" max="100" step="5" required style="width:100px;"></td>
-            <td class="text-center">{{ r.SoLan }}</td>
-            <td class="text-right">
-              <button type="submit" class="btn btn-outline btn-sm">Lưu</button>
-              <button type="submit" name="action" value="delete" class="btn btn-danger btn-sm" onclick="return confirm('Xóa loại dịch vụ này?');">Xóa</button>
-            </td>
-          </form>
+          <th>Mã</th>
+          <th>Tên dịch vụ</th>
+          <th>Đơn giá cơ bản (₫)</th>
+          <th>Tình trạng</th>
+          <th class="text-center">Số lần phát sinh</th>
+          <th class="text-right">Thao tác</th>
         </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+          <tr>
+            <form method="post">
+              <input type="hidden" name="action" value="save">
+              <input type="hidden" name="MaLoaiDV" value="{{ r.MaLoaiDV }}">
+              <td>#{{ r.MaLoaiDV }}</td>
+              <td><input type="text" name="TenLoaiDV" value="{{ r.TenLoaiDV }}" required></td>
+              <td><input type="number" name="DonGia" value="{{ r.DonGia|plain }}" min="0" step="1" required></td>
+              <td>
+                <select name="TinhTrang">
+                  <option value="Đang hoạt động" {{ 'selected' if r.TinhTrang == 'Đang hoạt động' else '' }}>Đang hoạt động</option>
+                  <option value="Ngừng hoạt động" {{ 'selected' if r.TinhTrang == 'Ngừng hoạt động' else '' }}>Ngừng hoạt động</option>
+                </select>
+              </td>
+              <td class="text-center">{{ r.SoLan }}</td>
+              <td class="text-right" style="white-space:nowrap;">
+                <button type="submit" class="btn btn-outline btn-sm">Lưu</button>
+                <button type="submit" name="action" value="delete" class="btn btn-danger btn-sm"
+                        {{ 'disabled title="Dịch vụ đã phát sinh trong phiếu dịch vụ, không thể xóa vật lý"' if r.SoLan > 0 else '' }}
+                        onclick="return confirm('Xóa dịch vụ này?');">
+                  Xóa
+                </button>
+              </td>
+            </form>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}

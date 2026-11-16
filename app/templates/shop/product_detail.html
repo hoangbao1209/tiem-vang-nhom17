@@ -3,27 +3,47 @@
 {% block content %}
 <div class="container section">
   <div class="card">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;align-items:center;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:28px;align-items:start;">
       <div class="product-thumb" style="border-radius:12px;border:1px solid #ede3ce;">
         <img src="{{ product_img(p) }}" alt="{{ p.TenSP }}">
       </div>
       <div>
-        <span class="badge badge-gold">{{ p.TenLoaiSP }}</span>
-        <h1 style="margin:10px 0 8px;font-size:1.7rem;">{{ p.TenSP }}</h1>
-        <div style="font-size:1.65rem;font-weight:800;color:var(--gold-600);margin-bottom:12px;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span class="badge badge-gold">{{ p.TenLoaiSP }}</span>
+          <span style="font-size:0.85rem;color:var(--slate-500);">Mã sản phẩm: <strong>{{ p.MaCode or ('SP' ~ p.MaSP) }}</strong></span>
+        </div>
+        <h1 style="margin:10px 0 8px;font-size:1.75rem;">{{ p.TenSP }}</h1>
+        <div style="font-size:1.7rem;font-weight:800;color:var(--gold-600);margin-bottom:12px;">
           {{ p.DonGiaBan|vnd }} <span style="font-size:0.95rem;font-weight:500;color:var(--slate-500);">/ {{ p.TenDVT }}</span>
         </div>
         <p style="color:var(--slate-700);">{{ p.MoTa or 'Sản phẩm kim hoàn chính hãng, đầy đủ tem kiểm định và hóa đơn bảo hành tại cửa hàng.' }}</p>
 
-        <div style="background:var(--gold-50);padding:12px 14px;border-radius:10px;margin:16px 0;font-size:0.9rem;">
-          <div>• <strong>Mã sản phẩm:</strong> #{{ p.MaSP }}</div>
-          <div>• <strong>Đơn vị tính:</strong> {{ p.TenDVT }}</div>
-          <div>• <strong>Tình trạng kho:</strong>
-            {% if p.SoLuongTon > 0 %}
-              <strong style="color:var(--success);">Còn {{ p.SoLuongTon }} {{ p.TenDVT }}</strong>
-            {% else %}
-              <strong style="color:var(--danger);">Tạm hết hàng</strong>
-            {% endif %}
+        <div class="spec-grid">
+          <div class="spec-item">
+            <span>Chất liệu</span>
+            <strong>{{ p.ChatLieu or p.TenLoaiSP }}</strong>
+          </div>
+          <div class="spec-item">
+            <span>Hàm lượng / Tuổi vàng</span>
+            <strong>{{ p.TuoiVang or 'Tiêu chuẩn kiểm định' }}</strong>
+          </div>
+          <div class="spec-item">
+            <span>Trọng lượng tham khảo</span>
+            <strong>{{ p.TrongLuong or 'Theo sản phẩm thực tế' }}</strong>
+          </div>
+          <div class="spec-item">
+            <span>Đơn vị tính & Kho</span>
+            <strong>
+              {% if p.SoLuongTon > 0 %}
+                <span style="color:var(--success);">Còn {{ p.SoLuongTon }} {{ p.TenDVT }}</span>
+              {% else %}
+                <span style="color:var(--danger);">Tạm hết hàng</span>
+              {% endif %}
+            </strong>
+          </div>
+          <div class="spec-item" style="grid-column:1 / -1;">
+            <span>Chính sách bảo hành & Thu đổi</span>
+            <strong>{{ p.BaoHanh or 'Bảo hành làm sạch & đánh bóng trọn đời tại cửa hàng' }}</strong>
           </div>
         </div>
 
@@ -42,7 +62,7 @@
 
   {% if related %}
     <div class="section">
-      <h2>Sản phẩm cùng loại</h2>
+      <h2>Sản phẩm cùng danh mục</h2>
       <div class="product-grid">
         {% for r in related %}
           <div class="product-card">
@@ -51,6 +71,7 @@
             </a>
             <div class="product-body">
               <a class="product-title" href="{{ url_for('shop.product_detail', ma_sp=r.MaSP) }}">{{ r.TenSP }}</a>
+              <div style="font-size:0.8rem;color:var(--slate-500);margin-bottom:4px;">{{ r.ChatLieu or r.TenLoaiSP }}</div>
               <div class="product-price">{{ r.DonGiaBan|vnd }}</div>
             </div>
           </div>

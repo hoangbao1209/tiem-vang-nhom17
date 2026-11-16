@@ -7,8 +7,9 @@ from flask import (Blueprint, abort, flash, redirect, render_template, request, 
 
 from ..db import get_db
 from ..services.catalog import PRODUCT_SELECT, get_product
+from ..services.settings import get_params
 from ..services.vouchers import NGUON_ONLINE, TT_CHO, lay_phieu_ban, tao_phieu_ban
-from ..utils import BusinessError, to_int
+from ..utils import BusinessError, to_float, to_int
 
 bp = Blueprint("shop", __name__)
 
@@ -23,20 +24,25 @@ SORT_LABELS = [("moi", "Mới nhất"), ("gia-tang", "Giá tăng dần"),
                ("gia-giam", "Giá giảm dần"), ("ten", "Tên A → Z")]
 
 
-# ------------------------------------------------------------------ trang chủ & sản phẩm
 @bp.route("/")
 def index():
     db = get_db()
     featured = db.execute(
-        PRODUCT_SELECT + " WHERE sp.HienThi = 1 AND sp.SoLuongTon > 0 ORDER BY sp.MaSP DESC LIMIT 8"
+        PRODUCT_SELECT + " WHERE sp.HienThi = 1 AND sp.TinhTrang = 'Đang kinh doanh' "
+        "AND sp.SoLuongTon > 0 ORDER BY sp.MaSP DESC LIMIT 8"
     ).fetchall()
     categories = db.execute(
         "SELECT l.MaLoaiSP, l.TenLoaiSP, COUNT(sp.MaSP) AS SoSP, MIN(sp.HinhAnh) AS HinhAnh "
-        "FROM LOAISANPHAM l LEFT JOIN SANPHAM sp ON sp.MaLoaiSP = l.MaLoaiSP AND sp.HienThi = 1 "
+        "FROM LOAISANPHAM l LEFT JOIN SANPHAM sp ON sp.MaLoaiSP = l.MaLoaiSP "
+        "AND sp.HienThi = 1 AND sp.TinhTrang = 'Đang kinh doanh' "
         "GROUP BY l.MaLoaiSP ORDER BY l.MaLoaiSP"
     ).fetchall()
-    services = db.execute("SELECT * FROM LOAIDICHVU ORDER BY MaLoaiDV LIMIT 6").fetchall()
-    return render_template("shop/index.html", featured=featured, categories=categories, services=services)
+    services = db.execute(
+        "SELECT * FROM LOAIDICHVU WHERE TinhTrang = 'Đang hoạt động' ORDER BY MaLoaiDV LIMIT 6"
+    ).fetchall()
+    ti_le = to_float(get_params(db).get("TiLeTraTruocToiThieu"), 50)
+    return render_template("shop/index.html", featured=featured, categories=categories,
+                           services=services, ti_le_tra_truoc=ti_le)
 
 
 @bp.route("/san-pham")
@@ -47,10 +53,10 @@ def products():
     sort = request.args.get("sort", "moi")
     con_hang = request.args.get("con_hang") == "1"
 
-    where, args = ["sp.HienThi = 1"], []
+    where, args = ["sp.HienThi = 1", "sp.TinhTrang = 'Đang kinh doanh'"], []
     if q:
-        where.append("(sp.TenSP LIKE ? OR l.TenLoaiSP LIKE ?)")
-        args += [f"%{q}%", f"%{q}%"]
+        where.append("(sp.TenSP LIKE ? OR l.TenLoaiSP LIKE ? OR sp.ChatLieu LIKE ? OR sp.MaCode LIKE ?)")
+        args += [f"%{q}%", f"%{q}%", f"%{q}%", f"%{q}%"]
     if loai:
         where.append("sp.MaLoaiSP = ?")
         args.append(loai)
@@ -69,10 +75,11 @@ def products():
 def product_detail(ma_sp):
     db = get_db()
     p = get_product(db, ma_sp)
-    if p is None or not p["HienThi"]:
+    if p is None or not p["HienThi"] or p["TinhTrang"] != "Đang kinh doanh":
         abort(404)
     related = db.execute(
-        PRODUCT_SELECT + " WHERE sp.HienThi = 1 AND sp.MaLoaiSP = ? AND sp.MaSP <> ? LIMIT 4",
+        PRODUCT_SELECT + " WHERE sp.HienThi = 1 AND sp.TinhTrang = 'Đang kinh doanh' "
+        "AND sp.MaLoaiSP = ? AND sp.MaSP <> ? LIMIT 4",
         (p["MaLoaiSP"], ma_sp),
     ).fetchall()
     return render_template("shop/product_detail.html", p=p, related=related)
@@ -80,17 +87,20 @@ def product_detail(ma_sp):
 
 @bp.route("/dich-vu")
 def dich_vu():
-    services = get_db().execute("SELECT * FROM LOAIDICHVU ORDER BY MaLoaiDV").fetchall()
-    return render_template("shop/services.html", services=services)
+    db = get_db()
+    services = db.execute(
+        "SELECT * FROM LOAIDICHVU WHERE TinhTrang = 'Đang hoạt động' ORDER BY MaLoaiDV"
+    ).fetchall()
+    ti_le = to_float(get_params(db).get("TiLeTraTruocToiThieu"), 50)
+    return render_template("shop/services.html", services=services, ti_le_tra_truoc=ti_le)
 
 
-# ------------------------------------------------------------------ giỏ hàng (lưu trong session)
 def cart_items(db):
     cart = session.get("cart", {})
     items, total = [], 0
     for ma, sl in cart.items():
         p = get_product(db, int(ma))
-        if p is None or not p["HienThi"]:
+        if p is None or not p["HienThi"] or p["TinhTrang"] != "Đang kinh doanh":
             continue
         item = dict(p)
         item["SoLuong"] = sl
@@ -112,8 +122,8 @@ def cart_add():
     sl = max(to_int(request.form.get("SoLuong"), 1) or 1, 1)
     p = get_product(get_db(), ma) if ma else None
     back = request.referrer or url_for("shop.products")
-    if p is None or not p["HienThi"]:
-        flash("Sản phẩm không tồn tại.", "error")
+    if p is None or not p["HienThi"] or p["TinhTrang"] != "Đang kinh doanh":
+        flash("Sản phẩm hiện không khả dụng.", "error")
         return redirect(back)
 
     cart = session.get("cart", {})
@@ -141,7 +151,7 @@ def cart_update():
     for ma in list(cart.keys()):
         qty = to_int(request.form.get(f"qty_{ma}"), cart[ma])
         p = get_product(db, int(ma))
-        if p is None or qty is None or qty <= 0:
+        if p is None or qty is None or qty <= 0 or p["TinhTrang"] != "Đang kinh doanh":
             cart.pop(ma)
             continue
         cart[ma] = min(qty, p["SoLuongTon"]) if p["SoLuongTon"] > 0 else 0
@@ -160,7 +170,6 @@ def cart_remove(ma_sp):
     return redirect(url_for("shop.cart"))
 
 
-# ------------------------------------------------------------------ đặt hàng
 @bp.route("/thanh-toan", methods=["GET", "POST"])
 def checkout():
     db = get_db()
@@ -176,6 +185,9 @@ def checkout():
         dia_chi = form.get("DiaChi", "").strip()
         email = form.get("Email", "").strip()
         ghi_chu = form.get("GhiChu", "").strip()
+        pttt = form.get("PhuongThucThanhToan", "Tiền mặt")
+        if pttt not in ("Tiền mặt", "Chuyển khoản"):
+            pttt = "Tiền mặt"
 
         errors = []
         if not ten:
@@ -194,7 +206,10 @@ def checkout():
                     {"ten": ten, "sdt": sdt, "dia_chi": dia_chi, "email": email},
                     [{"MaSP": i["MaSP"], "SoLuong": i["SoLuong"]} for i in items],
                     datetime.now().strftime("%Y-%m-%d %H:%M"),
-                    nguon=NGUON_ONLINE, trang_thai=TT_CHO, ghi_chu=ghi_chu,
+                    nguon=NGUON_ONLINE,
+                    trang_thai=TT_CHO,
+                    ghi_chu=ghi_chu,
+                    pttt=pttt,
                 )
             except BusinessError as e:
                 flash(str(e), "error")

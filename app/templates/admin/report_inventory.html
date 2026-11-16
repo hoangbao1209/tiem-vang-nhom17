@@ -2,28 +2,44 @@
 {% block content %}
 <div class="page-header no-print">
   <div>
-    <h1>BM4 – Báo cáo tồn kho theo tháng</h1>
+    <h1>Báo cáo tồn kho theo tháng</h1>
     <div style="color:var(--slate-500);font-size:0.9rem;">Tồn cuối = Tồn đầu + Số lượng mua vào − Số lượng bán ra</div>
   </div>
-  <form method="get" style="display:flex;gap:8px;align-items:center;">
-    <label style="font-weight:600;">Tháng:</label>
-    <select name="thang" style="width:90px;">
-      {% for m in range(1, 13) %}
-        <option value="{{ m }}" {{ 'selected' if m == thang else '' }}>{{ m }}</option>
-      {% endfor %}
-    </select>
-    <label style="font-weight:600;">Năm:</label>
-    <input type="number" name="nam" value="{{ nam }}" min="2020" max="2035" style="width:100px;">
-    <button type="submit" class="btn btn-primary">Xem báo cáo</button>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <form method="get" style="display:flex;gap:8px;align-items:center;">
+      <label style="font-weight:600;">Tháng:</label>
+      <select name="thang" style="width:85px;">
+        {% for m in range(1, 13) %}
+          <option value="{{ m }}" {{ 'selected' if m == thang else '' }}>{{ m }}</option>
+        {% endfor %}
+      </select>
+      <label style="font-weight:600;">Năm:</label>
+      <input type="number" name="nam" value="{{ nam }}" min="2020" max="2035" style="width:95px;">
+      <button type="submit" class="btn btn-primary">Xem báo cáo</button>
+    </form>
+    {% if g.user.VaiTro == 'admin' and not ky %}
+      <form action="{{ url_for('admin.close_period') }}" method="post" onsubmit="return confirm('Chốt số liệu báo cáo tồn kho &amp; doanh thu tháng {{ thang }}/{{ nam }}?');">
+        <input type="hidden" name="thang" value="{{ thang }}">
+        <input type="hidden" name="nam" value="{{ nam }}">
+        <button type="submit" class="btn btn-success">🔒 Chốt kỳ báo cáo</button>
+      </form>
+    {% endif %}
     <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ In báo cáo</button>
-  </form>
+  </div>
 </div>
 
 <div class="card">
   <div style="text-align:center;margin-bottom:16px;">
     <div style="font-weight:800;">{{ store.TenCuaHang }}</div>
-    <h2 style="margin:6px 0;">BÁO CÁO TỒN KHO (BM4)</h2>
-    <div>Tháng: <strong>{{ thang }}/{{ nam }}</strong></div>
+    <h2 style="margin:6px 0;">BÁO CÁO TỒN KHO THÁNG {{ thang }}/{{ nam }}</h2>
+    <div>
+      Trạng thái kỳ:
+      {% if ky %}
+        <span class="badge badge-success">Đã chốt ({{ ky.NgayChot|date }} — {{ ky.NguoiChot or 'Quản lý' }})</span>
+      {% else %}
+        <span class="badge badge-warning">Đang mở (tính trực tiếp từ phát sinh)</span>
+      {% endif %}
+    </div>
   </div>
 
   <div class="table-wrap">
@@ -31,7 +47,8 @@
       <thead>
         <tr>
           <th>STT</th>
-          <th>Sản phẩm</th>
+          <th>Mã SP</th>
+          <th>Tên sản phẩm</th>
           <th>Loại sản phẩm</th>
           <th class="text-center">Tồn đầu</th>
           <th class="text-center">Số lượng mua vào</th>
@@ -44,6 +61,7 @@
         {% for r in rows %}
           <tr>
             <td>{{ loop.index }}</td>
+            <td>{{ r.MaCode or ('SP' ~ r.MaSP) }}</td>
             <td><strong>{{ r.TenSP }}</strong></td>
             <td>{{ r.TenLoaiSP }}</td>
             <td class="text-center">{{ r.TonDau }}</td>
@@ -52,6 +70,8 @@
             <td class="text-center" style="font-weight:800;color:var(--navy-900);">{{ r.TonCuoi }}</td>
             <td>{{ r.TenDVT }}</td>
           </tr>
+        {% else %}
+          <tr><td colspan="9" class="text-center">Chưa có dữ liệu tồn kho trong kỳ.</td></tr>
         {% endfor %}
       </tbody>
     </table>

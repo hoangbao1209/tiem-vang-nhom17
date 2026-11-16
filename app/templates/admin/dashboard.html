@@ -3,12 +3,12 @@
 <div class="page-header">
   <div>
     <h1>Tổng quan hoạt động (Tháng {{ thang }}/{{ nam }})</h1>
-    <div style="color:var(--slate-500);font-size:0.9rem;">Theo dõi nhanh doanh thu, đơn đặt hàng online, phiếu dịch vụ và cảnh báo tồn kho.</div>
+    <div style="color:var(--slate-500);font-size:0.9rem;">Theo dõi doanh thu, đơn đặt hàng trực tuyến, phiếu dịch vụ và cảnh báo tồn kho.</div>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;">
-    <a class="btn btn-primary" href="{{ url_for('admin.sale_create') }}">+ Lập phiếu bán hàng (BM2)</a>
-    <a class="btn btn-dark" href="{{ url_for('admin.purchase_create') }}">+ Lập phiếu mua hàng (BM1)</a>
-    <a class="btn btn-outline" href="{{ url_for('admin.service_create') }}">+ Lập phiếu dịch vụ (BM3)</a>
+    <a class="btn btn-primary" href="{{ url_for('admin.sale_create') }}">+ Lập phiếu bán hàng</a>
+    <a class="btn btn-dark" href="{{ url_for('admin.purchase_create') }}">+ Lập phiếu mua hàng</a>
+    <a class="btn btn-outline" href="{{ url_for('admin.service_create') }}">+ Lập phiếu dịch vụ</a>
   </div>
 </div>
 
@@ -18,7 +18,7 @@
     <div class="kpi-value" style="color:var(--gold-600);">{{ dt_ban|vnd }}</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-label">Doanh thu dịch vụ (Tháng {{ thang }})</div>
+    <div class="kpi-label">Thực thu dịch vụ (Tháng {{ thang }})</div>
     <div class="kpi-value">{{ dt_dv|vnd }}</div>
   </div>
   <div class="kpi-card">

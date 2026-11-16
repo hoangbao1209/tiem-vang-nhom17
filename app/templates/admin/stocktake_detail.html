@@ -1,0 +1,76 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<div class="page-header no-print">
+  <h1>Chi tiết Phiếu kiểm kê kho #{{ p.SoPhieuKK }}</h1>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    {% if g.user.VaiTro == 'admin' and p.TrangThaiXacNhan != 'Đã xác nhận' %}
+      <form action="{{ url_for('admin.stocktake_confirm', so_phieu_kk=p.SoPhieuKK) }}" method="post">
+        <button type="submit" class="btn btn-success"
+                {{ 'disabled title="Người xác nhận phải khác người thực hiện kiểm kê"' if g.user.MaND == p.MaND_KiemKe else '' }}>
+          ✓ Xác nhận phiếu kiểm kê
+        </button>
+      </form>
+    {% endif %}
+    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ In biên bản</button>
+    <a class="btn btn-primary" href="{{ url_for('admin.stocktake_create') }}">+ Lập phiếu mới</a>
+    <a class="btn btn-outline" href="{{ url_for('admin.stocktakes') }}">← Danh sách</a>
+  </div>
+</div>
+
+<div class="card">
+  <div style="text-align:center;border-bottom:2px solid #eadfca;padding-bottom:14px;margin-bottom:16px;">
+    <div style="font-weight:800;font-size:1.1rem;">{{ store.TenCuaHang }}</div>
+    <h2 style="margin:6px 0;">BIÊN BẢN KIỂM KÊ KHO</h2>
+    <div>
+      Số phiếu: <strong>#{{ p.SoPhieuKK }}</strong> — Ngày kiểm kê: <strong>{{ p.NgayKiemKe|date }}</strong> —
+      Trạng thái: <span class="badge {{ 'badge-success' if p.TrangThaiXacNhan == 'Đã xác nhận' else 'badge-warning' }}">{{ p.TrangThaiXacNhan }}</span>
+    </div>
+  </div>
+
+  <div class="form-grid" style="margin-bottom:16px;">
+    <div><strong>Người thực hiện kiểm kê:</strong> {{ p.NguoiKiemKe or '—' }}</div>
+    <div><strong>Người xác nhận:</strong> {{ p.NguoiXacNhan or 'Chưa xác nhận' }}</div>
+    <div><strong>Ngày xác nhận:</strong> {{ p.NgayXacNhan|date if p.NgayXacNhan else '—' }}</div>
+    <div><strong>Ghi chú:</strong> {{ p.GhiChu or '—' }}</div>
+  </div>
+
+  <div class="alert alert-info" style="margin-bottom:14px;">
+    Phiếu kiểm kê ghi nhận số liệu đối chiếu tại thời điểm kiểm kê và không tự động làm thay đổi số lượng tồn kho trên hệ thống.
+  </div>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>STT</th>
+          <th>Mã SP</th>
+          <th>Tên sản phẩm</th>
+          <th>Loại sản phẩm</th>
+          <th>ĐVT</th>
+          <th class="text-center">Tồn hệ thống</th>
+          <th class="text-center">Tồn thực tế</th>
+          <th class="text-center">Chênh lệch</th>
+          <th>Lý do chênh lệch</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in lines %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ l.MaCode or ('SP' ~ l.MaSP) }}</td>
+            <td><strong>{{ l.TenSP }}</strong></td>
+            <td>{{ l.TenLoaiSP }}</td>
+            <td>{{ l.TenDVT }}</td>
+            <td class="text-center">{{ l.TonHeThong }}</td>
+            <td class="text-center"><strong>{{ l.TonThucTe }}</strong></td>
+            <td class="text-center" style="font-weight:700;color:{{ 'var(--success)' if l.ChenhLech == 0 else 'var(--danger)' }};">
+              {{ ('+' ~ l.ChenhLech) if l.ChenhLech > 0 else l.ChenhLech }}
+            </td>
+            <td>{{ l.LyDoChenhLech or '—' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

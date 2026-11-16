@@ -32,6 +32,24 @@ def init_db(seed=True):
     conn.commit()
 
 
+def _needs_schema_upgrade(db_path):
+    if not os.path.exists(db_path):
+        return True
+    try:
+        conn = sqlite3.connect(db_path, timeout=15)
+        has_new = conn.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='PHIEUKIEMKE'"
+        ).fetchone()
+        has_col = False
+        if has_new:
+            cols = [r[1] for r in conn.execute("PRAGMA table_info(SANPHAM)").fetchall()]
+            has_col = "ChatLieu" in cols and "TinhTrang" in cols
+        conn.close()
+        return not (has_new and has_col)
+    except sqlite3.Error:
+        return True
+
+
 @click.command("init-db")
 @click.option("--no-seed", is_flag=True, help="Chỉ tạo bảng, không thêm dữ liệu mẫu.")
 def init_db_command(no_seed):
@@ -43,7 +61,6 @@ def init_db_command(no_seed):
 def init_app(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)
-    # Lần chạy đầu tiên: tự tạo CSDL + dữ liệu mẫu
-    if not os.path.exists(app.config["DATABASE"]):
+    if _needs_schema_upgrade(app.config["DATABASE"]):
         with app.app_context():
             init_db()

@@ -1,0 +1,74 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Lập Phiếu kiểm kê kho</h1>
+    <div style="color:var(--slate-500);font-size:0.9rem;">Hệ thống ghi nhận tồn kho tại thời điểm kiểm kê. Nếu có chênh lệch giữa thực tế và hệ thống, vui lòng nhập rõ lý do.</div>
+  </div>
+  <a class="btn btn-outline" href="{{ url_for('admin.stocktakes') }}">← Danh sách phiếu kiểm kê</a>
+</div>
+
+<form method="post" class="card">
+  <div class="form-grid" style="margin-bottom:16px;">
+    <div class="form-group">
+      <label>Ngày kiểm kê *</label>
+      <input type="date" name="NgayKiemKe" value="{{ today }}" max="{{ today }}" required>
+    </div>
+    <div class="form-group">
+      <label>Người thực hiện kiểm kê</label>
+      <input type="text" value="{{ g.user.HoTen }}" readonly>
+    </div>
+    <div class="form-group">
+      <label>Ghi chú đợt kiểm kê</label>
+      <input type="text" name="GhiChu" placeholder="Ví dụ: Kiểm kê định kỳ cuối tháng...">
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>STT</th>
+          <th>Mã SP</th>
+          <th>Tên sản phẩm</th>
+          <th>Loại SP</th>
+          <th>ĐVT</th>
+          <th class="text-center">Tồn hệ thống</th>
+          <th style="width:130px;">Tồn thực tế *</th>
+          <th class="text-center">Chênh lệch</th>
+          <th style="min-width:220px;">Lý do chênh lệch (bắt buộc nếu lệch)</th>
+        </tr>
+      </thead>
+      <tbody id="stocktake-items-body">
+        {% for p in products %}
+          <tr data-ton="{{ p.SoLuongTon }}">
+            <td>{{ loop.index }}</td>
+            <td>{{ p.MaCode or ('SP' ~ p.MaSP) }}</td>
+            <td>
+              <input type="hidden" name="MaSP" value="{{ p.MaSP }}">
+              <strong>{{ p.TenSP }}</strong>
+              {% if p.TinhTrang != 'Đang kinh doanh' %}
+                <span class="badge badge-danger" style="margin-left:4px;">{{ p.TinhTrang }}</span>
+              {% endif %}
+            </td>
+            <td>{{ p.TenLoaiSP }}</td>
+            <td>{{ p.TenDVT }}</td>
+            <td class="text-center"><strong>{{ p.SoLuongTon }}</strong></td>
+            <td>
+              <input type="number" name="TonThucTe" value="{{ p.SoLuongTon }}" min="0" required>
+            </td>
+            <td class="text-center cell-diff">0</td>
+            <td>
+              <input type="text" name="LyDoChenhLech" placeholder="Không chênh lệch">
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div style="margin-top:18px;display:flex;justify-content:flex-end;">
+    <button type="submit" class="btn btn-primary">Lưu phiếu kiểm kê kho</button>
+  </div>
+</form>
+{% endblock %}

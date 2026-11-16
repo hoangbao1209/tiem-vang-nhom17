@@ -1,4 +1,4 @@
-/* Hỗ trợ tính toán tự động trên các biểu mẫu BM1, BM2, BM3 */
+/* Hỗ trợ tính toán tự động trên các biểu mẫu bán hàng, mua hàng, dịch vụ và kiểm kê */
 function formatVND(n) {
   const num = Number(n) || 0;
   return num.toLocaleString("vi-VN") + " ₫";
@@ -21,8 +21,33 @@ function removeVoucherRow(btn) {
   }
 }
 
+function updateSalePayment() {
+  const ptttEl = document.getElementById("sale-pttt");
+  const nhanInput = document.getElementById("sale-so-tien-nhan");
+  const thuaEl = document.getElementById("sale-tien-thua");
+  const totalEl = document.getElementById("voucher-total");
+  if (!ptttEl || !nhanInput || !thuaEl || !totalEl) return;
+
+  const total = Number(totalEl.dataset.raw || 0);
+  if (ptttEl.value === "Chuyển khoản") {
+    nhanInput.value = total;
+    nhanInput.readOnly = true;
+    thuaEl.textContent = formatVND(0);
+    thuaEl.style.color = "var(--slate-700)";
+  } else {
+    nhanInput.readOnly = false;
+    if (!nhanInput.dataset.touched) {
+      nhanInput.value = total;
+    }
+    const nhan = Number(nhanInput.value || 0);
+    const thua = nhan - total;
+    thuaEl.textContent = thua >= 0 ? formatVND(thua) : "Chưa đủ (" + formatVND(thua) + ")";
+    thuaEl.style.color = thua >= 0 ? "var(--success)" : "var(--danger)";
+  }
+}
+
 function recalcVoucher() {
-  // BM1: Phiếu mua hàng
+  // Phiếu mua hàng
   const purchaseTable = document.getElementById("purchase-items-body");
   if (purchaseTable) {
     let total = 0;
@@ -50,7 +75,7 @@ function recalcVoucher() {
     if (totalEl) totalEl.textContent = formatVND(total);
   }
 
-  // BM2: Phiếu bán hàng
+  // Phiếu bán hàng
   const saleTable = document.getElementById("sale-items-body");
   if (saleTable) {
     let total = 0;
@@ -78,12 +103,17 @@ function recalcVoucher() {
       if (subEl) subEl.textContent = formatVND(sub);
     });
     const totalEl = document.getElementById("voucher-total");
-    if (totalEl) totalEl.textContent = formatVND(total);
+    if (totalEl) {
+      totalEl.dataset.raw = String(total);
+      totalEl.textContent = formatVND(total);
+    }
+    updateSalePayment();
   }
 
-  // BM3: Phiếu dịch vụ
+  // Phiếu dịch vụ
   const svTable = document.getElementById("service-items-body");
   if (svTable) {
+    const sysRatio = Number(svTable.dataset.ratio || 50);
     let total = 0;
     let totalPre = 0;
     let totalRem = 0;
@@ -100,15 +130,14 @@ function recalcVoucher() {
       const traInput = tr.querySelector("input[name='TraTruoc']");
 
       const base = opt && opt.value ? Number(opt.dataset.dongia || 0) : 0;
-      const pt = opt && opt.value ? Number(opt.dataset.pt || 50) : 50;
       const dgdt = base + Math.max(cpr, 0);
       const sub = dgdt * Math.max(qty, 0);
-      const minPre = Math.round((sub * pt) / 100);
+      const minPre = Math.round((sub * sysRatio) / 100);
 
       if (dgdvEl) dgdvEl.textContent = formatVND(base);
       if (dgdtEl) dgdtEl.textContent = formatVND(dgdt);
       if (ttEl) ttEl.textContent = formatVND(sub);
-      if (minHint) minHint.textContent = `Tối thiểu ${pt}%: ${formatVND(minPre)}`;
+      if (minHint) minHint.textContent = `Tối thiểu ${sysRatio}%: ${formatVND(minPre)}`;
       if (traInput && !traInput.dataset.touched && sub > 0) {
         traInput.value = minPre;
       }
@@ -127,18 +156,50 @@ function recalcVoucher() {
     if (pEl) pEl.textContent = formatVND(totalPre);
     if (rEl) rEl.textContent = formatVND(totalRem);
   }
+
+  // Phiếu kiểm kê kho
+  const kkTable = document.getElementById("stocktake-items-body");
+  if (kkTable) {
+    kkTable.querySelectorAll("tr").forEach((tr) => {
+      const sysVal = Number(tr.dataset.ton || 0);
+      const actualInput = tr.querySelector("input[name='TonThucTe']");
+      const diffEl = tr.querySelector(".cell-diff");
+      const reasonInput = tr.querySelector("input[name='LyDoChenhLech']");
+      const actual = Number(actualInput?.value ?? sysVal);
+      const diff = actual - sysVal;
+      if (diffEl) {
+        diffEl.textContent = diff > 0 ? `+${diff}` : String(diff);
+        diffEl.style.color = diff === 0 ? "var(--success)" : "var(--danger)";
+        diffEl.style.fontWeight = "700";
+      }
+      if (reasonInput) {
+        reasonInput.required = diff !== 0;
+        reasonInput.placeholder = diff !== 0 ? "Bắt buộc nhập lý do chênh lệch..." : "Không chênh lệch";
+      }
+    });
+  }
 }
 
 document.addEventListener("input", (e) => {
-  if (e.target.matches("input[name='DonGia'], input[name='TraTruoc']")) {
+  if (e.target.matches("input[name='DonGia'], input[name='TraTruoc'], #sale-so-tien-nhan")) {
     e.target.dataset.touched = "1";
   }
-  if (e.target.closest("#purchase-items-body, #sale-items-body, #service-items-body")) {
+  if (e.target.id === "sale-so-tien-nhan") {
+    updateSalePayment();
+    return;
+  }
+  if (e.target.closest("#purchase-items-body, #sale-items-body, #service-items-body, #stocktake-items-body")) {
     recalcVoucher();
   }
 });
 
 document.addEventListener("change", (e) => {
+  if (e.target.id === "sale-pttt") {
+    const nhanInput = document.getElementById("sale-so-tien-nhan");
+    if (nhanInput) delete nhanInput.dataset.touched;
+    updateSalePayment();
+    return;
+  }
   if (e.target.matches("select[name='MaSP']")) {
     const tr = e.target.closest("tr");
     const priceInput = tr?.querySelector("input[name='DonGia']");
@@ -149,7 +210,7 @@ document.addEventListener("change", (e) => {
     const traInput = tr?.querySelector("input[name='TraTruoc']");
     if (traInput) delete traInput.dataset.touched;
   }
-  if (e.target.closest("#purchase-items-body, #sale-items-body, #service-items-body")) {
+  if (e.target.closest("#purchase-items-body, #sale-items-body, #service-items-body, #stocktake-items-body")) {
     recalcVoucher();
   }
   if (e.target.id === "quick-customer-select") {

@@ -5,12 +5,12 @@
   <div class="section-head">
     <div>
       <h2>{{ current_cat.TenLoaiSP if current_cat else 'Tất cả sản phẩm' }}</h2>
-      <div style="color:var(--slate-500);font-size:0.9rem;">Tìm thấy {{ products|length }} sản phẩm</div>
+      <div style="color:var(--slate-500);font-size:0.9rem;">Hiển thị {{ products|length }} sản phẩm đang kinh doanh</div>
     </div>
 
     <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-      <input type="text" name="q" value="{{ q }}" placeholder="Từ khóa..." style="width:190px;">
-      <select name="loai" style="width:170px;" onchange="this.form.submit()">
+      <input type="text" name="q" value="{{ q }}" placeholder="Tên, mã SP, chất liệu..." style="width:200px;">
+      <select name="loai" style="width:180px;" onchange="this.form.submit()">
         <option value="">-- Tất cả loại --</option>
         {% for c in nav_categories %}
           <option value="{{ c.MaLoaiSP }}" {{ 'selected' if loai == c.MaLoaiSP else '' }}>{{ c.TenLoaiSP }}</option>
@@ -39,6 +39,9 @@
           </a>
           <div class="product-body">
             <a class="product-title" href="{{ url_for('shop.product_detail', ma_sp=p.MaSP) }}">{{ p.TenSP }}</a>
+            <div style="font-size:0.82rem;color:var(--slate-500);margin-bottom:4px;">
+              {{ p.ChatLieu or p.TenLoaiSP }}{% if p.TrongLuong %} • {{ p.TrongLuong }}{% endif %}
+            </div>
             <div class="product-price">{{ p.DonGiaBan|vnd }} <span style="font-size:0.8rem;font-weight:500;color:var(--slate-500);">/ {{ p.TenDVT }}</span></div>
             <div class="product-meta">
               {% if p.SoLuongTon > 0 %}
@@ -46,6 +49,7 @@
               {% else %}
                 <span class="badge badge-danger">Tạm hết hàng</span>
               {% endif %}
+              <span style="margin-left:6px;">{{ p.MaCode or ('SP' ~ p.MaSP) }}</span>
             </div>
             {% if p.SoLuongTon > 0 %}
               <form class="product-actions" action="{{ url_for('shop.cart_add') }}" method="post">

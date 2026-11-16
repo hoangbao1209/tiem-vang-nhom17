@@ -9,11 +9,11 @@
 <body>
   <div class="topbar">
     <div class="container topbar-inner" style="max-width:100%;padding:0 24px;">
-      <div><strong>{{ store.TenCuaHang }}</strong> — Hệ thống quản lý kinh doanh vàng bạc đá quý (Nhóm 17)</div>
+      <div><strong>{{ store.TenCuaHang }}</strong> — Hệ thống quản lý kinh doanh vàng bạc đá quý</div>
       <div>
         <a href="{{ url_for('shop.index') }}">← Xem trang bán hàng</a>
         &nbsp;|&nbsp;
-        Xin chào <strong>{{ g.user.HoTen }}</strong> ({{ 'Quản trị viên' if g.user.VaiTro == 'admin' else 'Nhân viên' }})
+        Xin chào <strong>{{ g.user.HoTen }}</strong> ({{ 'Quản lý' if g.user.VaiTro == 'admin' else 'Nhân viên' }})
         &nbsp;|&nbsp;
         <a href="{{ url_for('auth.logout') }}">Đăng xuất</a>
       </div>
@@ -24,19 +24,21 @@
     <aside class="admin-sidebar">
       <a href="{{ url_for('admin.dashboard') }}" class="{{ 'active' if request.endpoint == 'admin.dashboard' else '' }}">📊 Tổng quan</a>
 
-      <div class="nav-group-label">Lập phiếu nghiệp vụ</div>
-      <a href="{{ url_for('admin.sales') }}" class="{{ 'active' if 'sale' in (request.endpoint or '') else '' }}">🧾 BM2 – Phiếu bán hàng</a>
-      <a href="{{ url_for('admin.purchases') }}" class="{{ 'active' if 'purchase' in (request.endpoint or '') else '' }}">📦 BM1 – Phiếu mua hàng</a>
-      <a href="{{ url_for('admin.services_vouchers') }}" class="{{ 'active' if request.endpoint in ('admin.services_vouchers','admin.service_create','admin.service_detail') else '' }}">🛠️ BM3 – Phiếu dịch vụ</a>
+      <div class="nav-group-label">Giao dịch & Nghiệp vụ</div>
+      <a href="{{ url_for('admin.sales') }}" class="{{ 'active' if 'sale' in (request.endpoint or '') else '' }}">🧾 Phiếu bán hàng</a>
+      <a href="{{ url_for('admin.purchases') }}" class="{{ 'active' if 'purchase' in (request.endpoint or '') else '' }}">📦 Phiếu mua hàng</a>
+      <a href="{{ url_for('admin.services_vouchers') }}" class="{{ 'active' if request.endpoint in ('admin.services_vouchers','admin.service_create','admin.service_detail') else '' }}">🛠️ Phiếu dịch vụ</a>
+      <a href="{{ url_for('admin.service_status_board') }}" class="{{ 'active' if request.endpoint == 'admin.service_status_board' else '' }}">⏳ Tiến độ dịch vụ</a>
+      <a href="{{ url_for('admin.stocktakes') }}" class="{{ 'active' if 'stocktake' in (request.endpoint or '') else '' }}">📋 Kiểm kê kho</a>
 
       <div class="nav-group-label">Báo cáo thống kê</div>
-      <a href="{{ url_for('admin.report_inventory') }}" class="{{ 'active' if request.endpoint == 'admin.report_inventory' else '' }}">📈 BM4 – Báo cáo tồn kho</a>
+      <a href="{{ url_for('admin.report_inventory') }}" class="{{ 'active' if request.endpoint == 'admin.report_inventory' else '' }}">📈 Báo cáo tồn kho</a>
       <a href="{{ url_for('admin.report_revenue') }}" class="{{ 'active' if request.endpoint == 'admin.report_revenue' else '' }}">💰 Báo cáo doanh thu</a>
 
-      <div class="nav-group-label">Danh mục & Quy định</div>
-      <a href="{{ url_for('admin.products_admin') }}" class="{{ 'active' if 'product' in (request.endpoint or '') else '' }}">💍 Sản phẩm</a>
-      <a href="{{ url_for('admin.categories_admin') }}" class="{{ 'active' if request.endpoint == 'admin.categories_admin' else '' }}">🏷️ Loại SP & ĐVT (QĐ1)</a>
-      <a href="{{ url_for('admin.service_types_admin') }}" class="{{ 'active' if request.endpoint == 'admin.service_types_admin' else '' }}">✨ Loại dịch vụ (QĐ3)</a>
+      <div class="nav-group-label">Danh mục & Cấu hình</div>
+      <a href="{{ url_for('admin.products_admin') }}" class="{{ 'active' if 'product' in (request.endpoint or '') else '' }}">💍 Danh sách sản phẩm</a>
+      <a href="{{ url_for('admin.categories_admin') }}" class="{{ 'active' if request.endpoint == 'admin.categories_admin' else '' }}">🏷️ Loại sản phẩm & ĐVT</a>
+      <a href="{{ url_for('admin.service_types_admin') }}" class="{{ 'active' if request.endpoint == 'admin.service_types_admin' else '' }}">✨ Danh sách dịch vụ</a>
       <a href="{{ url_for('admin.suppliers_admin') }}" class="{{ 'active' if request.endpoint == 'admin.suppliers_admin' else '' }}">🏢 Nhà cung cấp</a>
       <a href="{{ url_for('admin.customers_admin') }}" class="{{ 'active' if request.endpoint == 'admin.customers_admin' else '' }}">👥 Khách hàng</a>
       {% if g.user.VaiTro == 'admin' %}

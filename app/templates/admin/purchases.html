@@ -2,8 +2,8 @@
 {% block content %}
 <div class="page-header">
   <div>
-    <h1>BM1 – Danh sách Phiếu mua hàng (Nhập kho)</h1>
-    <div style="color:var(--slate-500);font-size:0.9rem;">Lập phiếu mua hàng từ nhà cung cấp sẽ tự động tăng tồn kho và cập nhật đơn giá mua gần nhất.</div>
+    <h1>Danh sách Phiếu mua hàng</h1>
+    <div style="color:var(--slate-500);font-size:0.9rem;">Quản lý chứng từ nhập hàng từ nhà cung cấp và cập nhật tồn kho sản phẩm.</div>
   </div>
   <a class="btn btn-primary" href="{{ url_for('admin.purchase_create') }}">+ Lập phiếu mua hàng</a>
 </div>
@@ -11,7 +11,7 @@
 <div class="card">
   <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:16px;">
     <div class="form-group" style="margin:0;">
-      <label>Tìm số phiếu / Nhà cung cấp</label>
+      <label>Số phiếu / Nhà cung cấp</label>
       <input type="text" name="q" value="{{ q }}" placeholder="Nhập tên NCC hoặc số phiếu...">
     </div>
     <div class="form-group" style="margin:0;">
@@ -30,10 +30,12 @@
     <table class="table">
       <thead>
         <tr>
+          <th>STT</th>
           <th>Số phiếu</th>
           <th>Ngày lập</th>
+          <th>Mã NCC</th>
           <th>Nhà cung cấp</th>
-          <th>SĐT</th>
+          <th>Người lập</th>
           <th class="text-center">Số mặt hàng</th>
           <th class="text-right">Tổng tiền mua</th>
           <th class="text-right">Chi tiết</th>
@@ -42,10 +44,12 @@
       <tbody>
         {% for r in rows %}
           <tr>
+            <td>{{ loop.index }}</td>
             <td><strong>#{{ r.SoPhieu }}</strong></td>
             <td>{{ r.NgayLap|date }}</td>
+            <td>NCC{{ '%03d'|format(r.MaNCC) }}</td>
             <td>{{ r.TenNCC }}</td>
-            <td>{{ r.SoDienThoai or '—' }}</td>
+            <td>{{ r.NguoiLap or '—' }}</td>
             <td class="text-center">{{ r.SoMatHang }}</td>
             <td class="text-right" style="font-weight:700;color:var(--gold-600);">{{ r.TongTien|vnd }}</td>
             <td class="text-right">
@@ -53,12 +57,12 @@
             </td>
           </tr>
         {% else %}
-          <tr><td colspan="7" class="text-center">Chưa có phiếu mua hàng nào.</td></tr>
+          <tr><td colspan="9" class="text-center">Chưa có phiếu mua hàng nào.</td></tr>
         {% endfor %}
       </tbody>
       <tfoot>
         <tr>
-          <th colspan="5" class="text-right">Tổng cộng ({{ rows|length }} phiếu):</th>
+          <th colspan="7" class="text-right">Tổng cộng ({{ rows|length }} phiếu):</th>
           <th class="text-right" style="color:var(--gold-600);font-size:1.1rem;">{{ tong|vnd }}</th>
           <th></th>
         </tr>

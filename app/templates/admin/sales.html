@@ -2,8 +2,8 @@
 {% block content %}
 <div class="page-header">
   <div>
-    <h1>BM2 – Danh sách Phiếu bán hàng & Đơn Online</h1>
-    <div style="color:var(--slate-500);font-size:0.9rem;">Quản lý hóa đơn bán tại quầy và đơn khách đặt qua website.</div>
+    <h1>Danh sách Phiếu bán hàng &amp; Đơn đặt hàng</h1>
+    <div style="color:var(--slate-500);font-size:0.9rem;">Quản lý hóa đơn bán trực tiếp tại quầy và đơn khách đặt hàng qua website.</div>
   </div>
   <a class="btn btn-primary" href="{{ url_for('admin.sale_create') }}">+ Lập phiếu bán hàng</a>
 </div>
@@ -20,6 +20,14 @@
         <option value="">Tất cả</option>
         <option value="Tại quầy" {{ 'selected' if nguon == 'Tại quầy' else '' }}>Tại quầy</option>
         <option value="Online" {{ 'selected' if nguon == 'Online' else '' }}>Online</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin:0;">
+      <label>Thanh toán</label>
+      <select name="pttt">
+        <option value="">Tất cả</option>
+        <option value="Tiền mặt" {{ 'selected' if pttt == 'Tiền mặt' else '' }}>Tiền mặt</option>
+        <option value="Chuyển khoản" {{ 'selected' if pttt == 'Chuyển khoản' else '' }}>Chuyển khoản</option>
       </select>
     </div>
     <div class="form-group" style="margin:0;">
@@ -47,10 +55,13 @@
     <table class="table">
       <thead>
         <tr>
+          <th>STT</th>
           <th>Số phiếu</th>
           <th>Ngày lập</th>
           <th>Khách hàng</th>
           <th>Nguồn</th>
+          <th>Thanh toán</th>
+          <th>Người lập</th>
           <th>Trạng thái</th>
           <th class="text-right">Tổng tiền</th>
           <th class="text-right">Thao tác</th>
@@ -59,10 +70,13 @@
       <tbody>
         {% for r in rows %}
           <tr>
+            <td>{{ loop.index }}</td>
             <td><strong>#{{ r.SoPhieu }}</strong></td>
             <td>{{ r.NgayLap|date }}</td>
             <td>{{ r.TenKH }}<br><small style="color:var(--slate-500);">{{ r.SoDienThoai or '' }}</small></td>
             <td><span class="badge {{ 'badge-info' if r.Nguon == 'Online' else 'badge-gold' }}">{{ r.Nguon }}</span></td>
+            <td>{{ r.PhuongThucThanhToan }}</td>
+            <td>{{ r.NguoiLap or 'Khách đặt Online' }}</td>
             <td>
               <span class="badge {{ 'badge-success' if r.TrangThai == 'Hoàn tất' else ('badge-danger' if r.TrangThai == 'Đã hủy' else 'badge-warning') }}">
                 {{ r.TrangThai }}
@@ -74,12 +88,12 @@
             </td>
           </tr>
         {% else %}
-          <tr><td colspan="7" class="text-center">Chưa có phiếu bán hàng nào.</td></tr>
+          <tr><td colspan="10" class="text-center">Chưa có phiếu bán hàng nào.</td></tr>
         {% endfor %}
       </tbody>
       <tfoot>
         <tr>
-          <th colspan="5" class="text-right">Tổng doanh thu hợp lệ:</th>
+          <th colspan="8" class="text-right">Tổng doanh thu hợp lệ ({{ rows|length }} phiếu):</th>
           <th class="text-right" style="color:var(--gold-600);font-size:1.1rem;">{{ tong|vnd }}</th>
           <th></th>
         </tr>

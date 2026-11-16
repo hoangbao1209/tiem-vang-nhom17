@@ -18,7 +18,7 @@
           &nbsp;•&nbsp;
           <a href="{{ url_for('auth.logout') }}">Đăng xuất</a>
         {% else %}
-          <a href="{{ url_for('auth.login') }}">Đăng nhập quản lý</a>
+          <a href="{{ url_for('auth.login') }}">Đăng nhập nhân viên</a>
         {% endif %}
       </div>
     </div>
@@ -35,7 +35,7 @@
       </a>
 
       <form class="search-box" action="{{ url_for('shop.products') }}" method="get">
-        <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="Tìm nhẫn vàng, dây chuyền, kim cương...">
+        <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="Tìm nhẫn vàng, dây chuyền, kim cương, mã sản phẩm...">
         <button type="submit">Tìm kiếm</button>
       </form>
 
@@ -54,8 +54,8 @@
           <a href="{{ url_for('shop.products', loai=c.MaLoaiSP) }}"
              class="{{ 'active' if request.args.get('loai')|int == c.MaLoaiSP else '' }}">{{ c.TenLoaiSP }}</a>
         {% endfor %}
-        <a href="{{ url_for('shop.dich_vu') }}" class="{{ 'active' if request.endpoint == 'shop.dich_vu' else '' }}">Bảng giá dịch vụ</a>
-        <a href="{{ url_for('shop.order_lookup') }}" class="{{ 'active' if request.endpoint == 'shop.order_lookup' else '' }}">Tra cứu đơn</a>
+        <a href="{{ url_for('shop.dich_vu') }}" class="{{ 'active' if request.endpoint == 'shop.dich_vu' else '' }}">Dịch vụ kim hoàn</a>
+        <a href="{{ url_for('shop.order_lookup') }}" class="{{ 'active' if request.endpoint == 'shop.order_lookup' else '' }}">Tra cứu đơn hàng</a>
       </div>
     </nav>
   </header>
@@ -79,7 +79,7 @@
     <div class="container footer-grid">
       <div>
         <h4>{{ store.TenCuaHang }}</h4>
-        <p>Hệ thống kinh doanh & quản lý vàng bạc đá quý (Đồ án Nhập môn Công nghệ Phần mềm – SE104.R11 – Nhóm 17).</p>
+        <p>Hệ thống kinh doanh vàng bạc đá quý uy tín, chuẩn tuổi vàng, minh bạch nguồn gốc kiểm định và dịch vụ chăm sóc trang sức trọn đời.</p>
         <p>📍 {{ store.DiaChi }}<br>☎️ {{ store.SoDienThoai }} – ✉️ {{ store.Email }}</p>
       </div>
       <div>
@@ -89,10 +89,10 @@
         {% endfor %}
       </div>
       <div>
-        <h4>Hỗ trợ & Quản lý</h4>
+        <h4>Hỗ trợ khách hàng</h4>
         <div><a href="{{ url_for('shop.dich_vu') }}">• Dịch vụ gia công & bảo hành</a></div>
-        <div><a href="{{ url_for('shop.order_lookup') }}">• Tra cứu phiếu bán / đơn hàng</a></div>
-        <div><a href="{{ url_for('admin.dashboard') }}">• Phân hệ quản lý cửa hàng</a></div>
+        <div><a href="{{ url_for('shop.order_lookup') }}">• Tra cứu hóa đơn / đơn đặt hàng</a></div>
+        <div><a href="{{ url_for('admin.dashboard') }}">• Hệ thống quản lý nội bộ</a></div>
       </div>
     </div>
   </footer>

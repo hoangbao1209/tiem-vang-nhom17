@@ -1,18 +1,21 @@
 {% extends "admin/base_admin.html" %}
 {% block content %}
 <div class="page-header no-print">
-  <h1>BM3 – Chi tiết Phiếu dịch vụ #{{ p.SoPhieu }}</h1>
-  <div style="display:flex;gap:8px;">
+  <h1>Chi tiết Phiếu dịch vụ #{{ p.SoPhieu }}</h1>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
     <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ In phiếu</button>
+    <a class="btn btn-outline" href="{{ url_for('admin.service_status_board') }}">⏳ Tiến độ gia công</a>
     <a class="btn btn-primary" href="{{ url_for('admin.service_create') }}">+ Lập phiếu mới</a>
     <a class="btn btn-outline" href="{{ url_for('admin.services_vouchers') }}">← Danh sách</a>
   </div>
 </div>
 
+{% set con_phai_thu = p.TongTien - da_thu %}
+
 <div class="card">
   <div style="text-align:center;border-bottom:2px solid #eadfca;padding-bottom:14px;margin-bottom:16px;">
     <div style="font-weight:800;font-size:1.1rem;">{{ store.TenCuaHang }}</div>
-    <h2 style="margin:6px 0;">PHIẾU DỊCH VỤ (BM3)</h2>
+    <h2 style="margin:6px 0;">PHIẾU DỊCH VỤ</h2>
     <div>
       Số phiếu: <strong>#{{ p.SoPhieu }}</strong> — Ngày lập: <strong>{{ p.NgayLap|date }}</strong> —
       Tình trạng phiếu: <span class="badge {{ 'badge-success' if p.TinhTrang == 'Hoàn thành' else 'badge-warning' }}">{{ p.TinhTrang }}</span>
@@ -22,6 +25,10 @@
   <div class="form-grid" style="margin-bottom:16px;">
     <div><strong>Khách hàng:</strong> {{ p.TenKH }}</div>
     <div><strong>Số điện thoại:</strong> {{ p.SoDienThoai or '—' }}</div>
+    <div><strong>Địa chỉ:</strong> {{ p.DiaChi or '—' }}</div>
+    <div><strong>Nhân viên tiếp nhận:</strong> {{ p.NguoiLap or '—' }}</div>
+    <div><strong>Tỷ lệ trả trước tối thiểu áp dụng:</strong> {{ p.TiLeTraTruocApDung|plain }}%</div>
+    <div><strong>Đã thu / Tổng tiền:</strong> <span style="color:var(--success);font-weight:700;">{{ da_thu|vnd }}</span> / {{ p.TongTien|vnd }}</div>
   </div>
 
   <div class="table-wrap">
@@ -36,7 +43,7 @@
           <th class="text-center">SL</th>
           <th class="text-right">Thành tiền</th>
           <th class="text-right">Trả trước</th>
-          <th class="text-right">Còn lại</th>
+          <th class="text-right">Còn lại (sau cọc)</th>
           <th>Ngày giao</th>
           <th>Tình trạng</th>
         </tr>
@@ -45,7 +52,12 @@
         {% for l in lines %}
           <tr>
             <td>{{ loop.index }}</td>
-            <td><strong>{{ l.TenLoaiDV }}</strong></td>
+            <td>
+              <strong>{{ l.TenLoaiDV }}</strong>
+              {% if l.GhiChu %}
+                <div style="font-size:0.78rem;color:var(--slate-500);">{{ l.GhiChu }}</div>
+              {% endif %}
+            </td>
             <td class="text-right">{{ l.DonGiaDichVu|vnd }}</td>
             <td class="text-right">{{ l.ChiPhiRieng|vnd }}</td>
             <td class="text-right">{{ l.DonGiaDuocTinh|vnd }}</td>
@@ -57,9 +69,20 @@
             <td>
               {% if l.TinhTrang == 'Đã giao' %}
                 <span class="badge badge-success">Đã giao</span>
+                {% if can_revert %}
+                  <details class="no-print" style="margin-top:6px;">
+                    <summary style="cursor:pointer;font-size:0.78rem;color:var(--danger);font-weight:600;">Chuyển ngược</summary>
+                    <form action="{{ url_for('admin.service_deliver_line', ma_ct=l.MaCT) }}" method="post" style="margin-top:6px;display:flex;flex-direction:column;gap:4px;min-width:170px;">
+                      <input type="hidden" name="TinhTrangMoi" value="Chưa giao">
+                      <input type="text" name="LyDo" required placeholder="Nhập lý do chuyển ngược..." style="font-size:0.8rem;padding:5px 8px;">
+                      <button type="submit" class="btn btn-danger btn-sm">Về Chưa giao</button>
+                    </form>
+                  </details>
+                {% endif %}
               {% else %}
-                <form action="{{ url_for('admin.service_deliver_line', ma_ct=l.MaCT) }}" method="post" style="display:inline;">
-                  <button type="submit" class="btn btn-primary btn-sm no-print">Xác nhận giao</button>
+                <form action="{{ url_for('admin.service_deliver_line', ma_ct=l.MaCT) }}" method="post" style="display:inline;" class="no-print">
+                  <input type="hidden" name="TinhTrangMoi" value="Đã giao">
+                  <button type="submit" class="btn btn-primary btn-sm">Xác nhận giao</button>
                 </form>
               {% endif %}
             </td>
@@ -75,6 +98,88 @@
           <th colspan="2"></th>
         </tr>
       </tfoot>
+    </table>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;" class="no-print">
+  <div class="card">
+    <div class="card-title">
+      <span>Lịch sử thu tiền dịch vụ</span>
+      <span class="badge {{ 'badge-success' if con_phai_thu <= 0 else 'badge-warning' }}">
+        {{ 'Đã thu đủ' if con_phai_thu <= 0 else ('Còn phải thu: ' ~ con_phai_thu|vnd) }}
+      </span>
+    </div>
+
+    {% if con_phai_thu > 0 %}
+      <form action="{{ url_for('admin.service_collect_payment', so_phieu=p.SoPhieu) }}" method="post" style="background:var(--gold-50);padding:12px;border-radius:10px;border:1px solid #eadfca;margin-bottom:14px;">
+        <div style="font-weight:700;margin-bottom:8px;font-size:0.9rem;">Ghi nhận thu phần còn lại</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <input type="number" name="SoTienThu" value="{{ con_phai_thu|plain }}" min="1" max="{{ con_phai_thu|plain }}" step="any" required placeholder="Số tiền thu">
+          <select name="HinhThucThanhToan">
+            <option value="Tiền mặt">Tiền mặt</option>
+            <option value="Chuyển khoản">Chuyển khoản</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" name="GhiChu" placeholder="Ghi chú phiếu thu (tùy chọn)">
+          <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap;">Thu tiền</button>
+        </div>
+      </form>
+    {% endif %}
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Ngày thu</th>
+          <th>Loại thu</th>
+          <th>Hình thức</th>
+          <th class="text-right">Số tiền</th>
+          <th>Người thu</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in receipts %}
+          <tr>
+            <td>{{ r.NgayThu|date }}</td>
+            <td>{{ r.LoaiThu }}<br><small style="color:var(--slate-500);">{{ r.GhiChu or '' }}</small></td>
+            <td>{{ r.HinhThucThanhToan }}</td>
+            <td class="text-right" style="font-weight:700;color:var(--success);">{{ r.SoTienThu|vnd }}</td>
+            <td>{{ r.NguoiThu or '—' }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5" class="text-center">Chưa có giao dịch thu tiền.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Lịch sử cập nhật tình trạng dịch vụ</h3>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Thời điểm</th>
+          <th>Dịch vụ</th>
+          <th>Chuyển trạng thái</th>
+          <th>Người thực hiện &amp; Lý do</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in logs %}
+          <tr>
+            <td>{{ log.ThoiDiemCapNhat|date }}</td>
+            <td><strong>{{ log.TenLoaiDV }}</strong></td>
+            <td>{{ log.TinhTrangCu or '—' }} → <strong>{{ log.TinhTrangMoi }}</strong></td>
+            <td>
+              {{ log.NguoiThucHien or '—' }}
+              {% if log.LyDo %}<div style="font-size:0.8rem;color:var(--danger);">Lý do: {{ log.LyDo }}</div>{% endif %}
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4" class="text-center">Chưa có lịch sử thay đổi trạng thái.</td></tr>
+        {% endfor %}
+      </tbody>
     </table>
   </div>
 </div>

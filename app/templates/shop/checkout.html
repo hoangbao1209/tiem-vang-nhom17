@@ -4,7 +4,7 @@
 <div class="container section">
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;">
     <div class="card">
-      <h2 style="margin-top:0;">Thông tin người nhận</h2>
+      <h2 style="margin-top:0;">Thông tin nhận hàng & thanh toán</h2>
       <form method="post">
         <div class="form-group">
           <label>Họ và tên khách hàng *</label>
@@ -23,6 +23,13 @@
           <input type="email" name="Email" value="{{ form.get('Email', '') }}" placeholder="khachhang@email.com">
         </div>
         <div class="form-group">
+          <label>Phương thức thanh toán *</label>
+          <select name="PhuongThucThanhToan">
+            <option value="Tiền mặt" {{ 'selected' if form.get('PhuongThucThanhToan') == 'Tiền mặt' else '' }}>Tiền mặt (Thanh toán khi nhận / tại quầy)</option>
+            <option value="Chuyển khoản" {{ 'selected' if form.get('PhuongThucThanhToan') == 'Chuyển khoản' else '' }}>Chuyển khoản ngân hàng</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label>Ghi chú đơn hàng</label>
           <textarea name="GhiChu" rows="2" placeholder="Nhận tại quầy hoặc giao giờ hành chính...">{{ form.get('GhiChu', '') }}</textarea>
         </div>
@@ -31,7 +38,7 @@
     </div>
 
     <div class="card">
-      <h2 style="margin-top:0;">Tóm tắt đơn hàng</h2>
+      <h2 style="margin-top:0;">Chi tiết đơn hàng</h2>
       <table class="table">
         <thead>
           <tr>
@@ -43,7 +50,10 @@
         <tbody>
           {% for i in items %}
             <tr>
-              <td>{{ i.TenSP }}</td>
+              <td>
+                <strong>{{ i.TenSP }}</strong>
+                <div style="font-size:0.78rem;color:var(--slate-500);">{{ i.ChatLieu or i.TenLoaiSP }}</div>
+              </td>
               <td class="text-center">{{ i.SoLuong }} {{ i.TenDVT }}</td>
               <td class="text-right">{{ i.ThanhTien|vnd }}</td>
             </tr>
@@ -57,7 +67,7 @@
         </tfoot>
       </table>
       <p style="font-size:0.84rem;color:var(--slate-500);margin-top:12px;">
-        Sau khi đặt hàng, hệ thống tự động tạo <strong>Phiếu bán hàng (Online)</strong> và giữ hàng trong kho cho bạn.
+        Sau khi xác nhận, hệ thống tự động tạo mã đơn hàng và giữ sản phẩm trong kho cho quý khách.
       </p>
     </div>
   </div>
