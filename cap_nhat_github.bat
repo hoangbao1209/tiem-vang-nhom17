@@ -28,7 +28,7 @@ if errorlevel 1 (
 )
 
 echo [3/3] Dang day code len GitHub (Render se tu dong cap nhat)...
-"%GIT_EXE%" push -u origin main
+"%GIT_EXE%" push -u origin main --force
 if errorlevel 1 (
     echo.
     echo [LOI] Push that bai. Vui long kiem tra mang hoac dang nhap GitHub.
