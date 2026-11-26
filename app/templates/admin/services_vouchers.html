@@ -3,21 +3,21 @@
 <div class="page-header">
   <div>
     <h1>Danh sách Phiếu dịch vụ</h1>
-    <div style="color:var(--slate-500);font-size:0.9rem;">Quản lý phiếu gia công, đánh bóng, sửa chữa trang sức và theo dõi thu tiền, giao trả dịch vụ.</div>
+    <div class="page-subtitle">Tra cứu phiếu gia công, làm mới, sửa chữa trang sức; tình trạng Hoàn thành tự động xác định khi toàn bộ hạng mục đã bàn giao.</div>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;">
-    <a class="btn btn-outline" href="{{ url_for('admin.service_status_board') }}">⏳ Theo dõi tiến độ gia công</a>
+    <a class="btn btn-outline" href="{{ url_for('admin.service_status_board') }}">⏳ Bảng tình trạng dịch vụ</a>
     <a class="btn btn-primary" href="{{ url_for('admin.service_create') }}">+ Lập phiếu dịch vụ</a>
   </div>
 </div>
 
 <div class="card">
-  <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:16px;">
-    <div class="form-group" style="margin:0;">
-      <label>Khách hàng / SĐT / Số phiếu</label>
-      <input type="text" name="q" value="{{ q }}" placeholder="Tên, SĐT hoặc số phiếu...">
+  <form method="get" class="filter-bar">
+    <div class="form-group" style="flex:1;min-width:190px;">
+      <label>Số phiếu / Khách hàng / SĐT</label>
+      <input type="text" name="q" value="{{ q }}" placeholder="VD: PDV202611001, Trần Thị Bình...">
     </div>
-    <div class="form-group" style="margin:0;">
+    <div class="form-group">
       <label>Tình trạng phiếu</label>
       <select name="tinh_trang">
         <option value="">Tất cả</option>
@@ -25,11 +25,11 @@
         <option value="Hoàn thành" {{ 'selected' if tinh_trang == 'Hoàn thành' else '' }}>Hoàn thành</option>
       </select>
     </div>
-    <div class="form-group" style="margin:0;">
+    <div class="form-group">
       <label>Từ ngày</label>
       <input type="date" name="tu_ngay" value="{{ tu_ngay }}">
     </div>
-    <div class="form-group" style="margin:0;">
+    <div class="form-group">
       <label>Đến ngày</label>
       <input type="date" name="den_ngay" value="{{ den_ngay }}">
     </div>
@@ -45,44 +45,41 @@
           <th>Số phiếu</th>
           <th>Ngày lập</th>
           <th>Khách hàng</th>
-          <th class="text-center">Số DV</th>
           <th class="text-right">Tổng tiền</th>
-          <th class="text-right">Đã thu</th>
-          <th class="text-right">Còn phải thu</th>
+          <th class="text-right">Trả trước ban đầu</th>
+          <th class="text-right">Còn lại (ban đầu)</th>
+          <th class="text-right">Đã thực thu</th>
           <th>Tình trạng</th>
-          <th class="text-right">Chi tiết</th>
+          <th class="text-right">Thao tác</th>
         </tr>
       </thead>
       <tbody>
         {% for r in rows %}
-          {% set con_phai_thu = r.TongTien - r.DaThu %}
           <tr>
             <td>{{ loop.index }}</td>
-            <td><strong>#{{ r.SoPhieu }}</strong></td>
+            <td><strong>{{ r.SoPhieuDV }}</strong></td>
             <td>{{ r.NgayLap|date }}</td>
-            <td>{{ r.TenKH }}<br><small style="color:var(--slate-500);">{{ r.SoDienThoai or '' }}</small></td>
-            <td class="text-center">{{ r.SoDV }}</td>
+            <td>{{ r.TenKhachHang }}<br><small style="color:var(--slate-500);">{{ r.SoDienThoai }}</small></td>
             <td class="text-right" style="font-weight:700;">{{ r.TongTien|vnd }}</td>
-            <td class="text-right" style="color:var(--success);font-weight:600;">{{ r.DaThu|vnd }}</td>
-            <td class="text-right" style="color:{{ 'var(--danger)' if con_phai_thu > 0 else 'var(--slate-500)' }};font-weight:600;">
-              {{ con_phai_thu|vnd }}
-            </td>
+            <td class="text-right">{{ r.TongTraTruoc|vnd }}</td>
+            <td class="text-right">{{ r.TongConLai|vnd }}</td>
+            <td class="text-right" style="color:var(--emerald);font-weight:700;">{{ r.DaThu|vnd }}</td>
             <td>
               <span class="badge {{ 'badge-success' if r.TinhTrang == 'Hoàn thành' else 'badge-warning' }}">{{ r.TinhTrang }}</span>
             </td>
             <td class="text-right">
-              <a class="btn btn-outline btn-sm" href="{{ url_for('admin.service_detail', so_phieu=r.SoPhieu) }}">Xem phiếu</a>
+              <a class="btn btn-outline btn-sm" href="{{ url_for('admin.service_detail', so_phieu=r.SoPhieuDV) }}">Xem phiếu</a>
             </td>
           </tr>
         {% else %}
-          <tr><td colspan="10" class="text-center">Chưa có phiếu dịch vụ nào.</td></tr>
+          <tr><td colspan="10" class="text-center">Không tìm thấy phiếu dịch vụ phù hợp.</td></tr>
         {% endfor %}
       </tbody>
       <tfoot>
         <tr>
-          <th colspan="5" class="text-right">Tổng giá trị ({{ rows|length }} phiếu):</th>
-          <th class="text-right" style="color:var(--gold-600);font-size:1.1rem;">{{ tong|vnd }}</th>
-          <th colspan="4"></th>
+          <th colspan="4" class="text-right">Tổng giá trị ({{ rows|length }} phiếu):</th>
+          <th class="text-right" style="color:var(--gold-600);font-size:1.12rem;">{{ tong|vnd }}</th>
+          <th colspan="5"></th>
         </tr>
       </tfoot>
     </table>

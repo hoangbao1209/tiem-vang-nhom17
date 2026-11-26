@@ -3,61 +3,79 @@
 <div class="page-header">
   <div>
     <h1>Quản lý Loại sản phẩm &amp; Đơn vị tính</h1>
-    <div style="color:var(--slate-500);font-size:0.9rem;">Quản lý danh mục loại sản phẩm, đơn vị tính và tỷ lệ phần trăm lợi nhuận áp dụng cho từng loại.</div>
+    <div class="page-subtitle">Cấu hình danh sách đơn vị tính, loại sản phẩm và tỷ lệ phần trăm lợi nhuận áp dụng cho từng loại (chỉ áp dụng cho giao dịch mới).</div>
   </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1.45fr 1fr;gap:20px;">
+{% if not can_edit_rules %}
+  <div class="alert alert-info">
+    <span>Bạn đang xem ở chế độ Nhân viên. Chỉ Quản lý mới có quyền thay đổi quy định loại sản phẩm, đơn vị tính và % lợi nhuận.</span>
+  </div>
+{% endif %}
+
+<div class="split-grid">
   <div class="card">
     <h3 class="card-title">Danh sách Loại sản phẩm</h3>
-    <form method="post" style="display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:8px;margin-bottom:14px;">
-      <input type="hidden" name="action" value="save_cat">
-      <input type="text" name="TenLoaiSP" required placeholder="Tên loại SP mới...">
-      <select name="MaDVT" required>
-        {% for u in units %}
-          <option value="{{ u.MaDVT }}">{{ u.TenDVT }}</option>
-        {% endfor %}
-      </select>
-      <input type="number" name="PhanTramLoiNhuan" step="0.5" min="0" required placeholder="% lợi nhuận">
-      <button type="submit" class="btn btn-primary">+ Thêm</button>
-    </form>
+    {% if can_edit_rules %}
+      <form method="post" class="inline-add-grid">
+        <input type="hidden" name="action" value="save_cat">
+        <input type="text" name="TenLoaiSP" required placeholder="Tên loại SP mới *">
+        <select name="MaDVT" required>
+          {% for u in units %}
+            <option value="{{ u.MaDVT }}">{{ u.TenDVT }}</option>
+          {% endfor %}
+        </select>
+        <input type="number" name="PhanTramLoiNhuan" step="0.5" min="0" max="500" required placeholder="% lợi nhuận">
+        <button type="submit" class="btn btn-primary">+ Thêm</button>
+      </form>
+    {% endif %}
 
     <div class="table-wrap">
       <table class="table">
         <thead>
           <tr>
+            <th>Mã</th>
             <th>Tên loại sản phẩm</th>
             <th>ĐVT</th>
             <th>% Lợi nhuận</th>
             <th class="text-center">Số SP</th>
-            <th class="text-right">Cập nhật / Xóa</th>
+            {% if can_edit_rules %}<th class="text-right">Thao tác</th>{% endif %}
           </tr>
         </thead>
         <tbody>
           {% for c in categories %}
             <tr>
-              <form method="post">
-                <input type="hidden" name="action" value="save_cat">
-                <input type="hidden" name="MaLoaiSP" value="{{ c.MaLoaiSP }}">
-                <td><input type="text" name="TenLoaiSP" value="{{ c.TenLoaiSP }}" required></td>
-                <td>
-                  <select name="MaDVT">
-                    {% for u in units %}
-                      <option value="{{ u.MaDVT }}" {{ 'selected' if u.MaDVT == c.MaDVT else '' }}>{{ u.TenDVT }}</option>
-                    {% endfor %}
-                  </select>
-                </td>
-                <td><input type="number" name="PhanTramLoiNhuan" value="{{ c.PhanTramLoiNhuan|plain }}" step="0.5" min="0" style="width:90px;"></td>
+              {% if can_edit_rules %}
+                <form method="post">
+                  <input type="hidden" name="action" value="save_cat">
+                  <input type="hidden" name="MaLoaiSP" value="{{ c.MaLoaiSP }}">
+                  <td><strong>{{ c.MaLoaiSP }}</strong></td>
+                  <td><input type="text" name="TenLoaiSP" value="{{ c.TenLoaiSP }}" required></td>
+                  <td>
+                    <select name="MaDVT">
+                      {% for u in units %}
+                        <option value="{{ u.MaDVT }}" {{ 'selected' if u.MaDVT == c.MaDVT else '' }}>{{ u.TenDVT }}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  <td><input type="number" name="PhanTramLoiNhuan" value="{{ c.PhanTramLoiNhuan|pct_num }}" step="0.5" min="0" max="500" style="width:88px;"></td>
+                  <td class="text-center">{{ c.SoSP }}</td>
+                  <td class="text-right" style="white-space:nowrap;">
+                    <button type="submit" class="btn btn-outline btn-sm">Lưu</button>
+                    <button type="submit" name="action" value="delete_cat" class="btn btn-danger btn-sm"
+                            {{ 'disabled title="Loại sản phẩm đã có sản phẩm liên kết, không thể xóa"' if c.SoSP > 0 else '' }}
+                            onclick="return confirm('Xóa loại sản phẩm {{ c.MaLoaiSP }}?');">
+                      Xóa
+                    </button>
+                  </td>
+                </form>
+              {% else %}
+                <td><strong>{{ c.MaLoaiSP }}</strong></td>
+                <td><strong>{{ c.TenLoaiSP }}</strong></td>
+                <td>{{ c.TenDVT }}</td>
+                <td><span class="badge badge-gold">{{ c.PhanTramLoiNhuan|pct }}</span></td>
                 <td class="text-center">{{ c.SoSP }}</td>
-                <td class="text-right" style="white-space:nowrap;">
-                  <button type="submit" class="btn btn-outline btn-sm">Lưu</button>
-                  <button type="submit" name="action" value="delete_cat" class="btn btn-danger btn-sm"
-                          {{ 'disabled title="Loại sản phẩm đã có sản phẩm liên kết, không thể xóa"' if c.SoSP > 0 else '' }}
-                          onclick="return confirm('Xóa loại sản phẩm này?');">
-                    Xóa
-                  </button>
-                </td>
-              </form>
+              {% endif %}
             </tr>
           {% endfor %}
         </tbody>
@@ -66,42 +84,54 @@
   </div>
 
   <div class="card">
-    <h3 class="card-title">Đơn vị tính</h3>
-    <form method="post" style="display:flex;gap:8px;margin-bottom:14px;">
-      <input type="hidden" name="action" value="save_unit">
-      <input type="text" name="TenDVT" required placeholder="Tên ĐVT mới (VD: Bộ, Cây)...">
-      <button type="submit" class="btn btn-primary">+ Thêm</button>
-    </form>
+    <h3 class="card-title">Danh sách Đơn vị tính</h3>
+    {% if can_edit_rules %}
+      <form method="post" style="display:flex;gap:8px;margin-bottom:16px;">
+        <input type="hidden" name="action" value="save_unit">
+        <input type="text" name="TenDVT" required placeholder="Tên ĐVT mới (VD: Carat, Bộ)...">
+        <button type="submit" class="btn btn-primary">+ Thêm</button>
+      </form>
+    {% endif %}
 
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Tên ĐVT</th>
-          <th class="text-center">Số loại dùng</th>
-          <th class="text-right">Thao tác</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for u in units %}
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
           <tr>
-            <form method="post">
-              <input type="hidden" name="action" value="save_unit">
-              <input type="hidden" name="MaDVT" value="{{ u.MaDVT }}">
-              <td><input type="text" name="TenDVT" value="{{ u.TenDVT }}" required></td>
-              <td class="text-center">{{ u.SoLoai }}</td>
-              <td class="text-right" style="white-space:nowrap;">
-                <button type="submit" class="btn btn-outline btn-sm">Lưu</button>
-                <button type="submit" name="action" value="delete_unit" class="btn btn-danger btn-sm"
-                        {{ 'disabled title="Đơn vị tính đang được sử dụng, không thể xóa"' if u.SoLoai > 0 else '' }}
-                        onclick="return confirm('Xóa ĐVT này?');">
-                  Xóa
-                </button>
-              </td>
-            </form>
+            <th>Mã</th>
+            <th>Tên ĐVT</th>
+            <th class="text-center">Số loại</th>
+            {% if can_edit_rules %}<th class="text-right">Thao tác</th>{% endif %}
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for u in units %}
+            <tr>
+              {% if can_edit_rules %}
+                <form method="post">
+                  <input type="hidden" name="action" value="save_unit">
+                  <input type="hidden" name="MaDVT" value="{{ u.MaDVT }}">
+                  <td><strong>{{ u.MaDVT }}</strong></td>
+                  <td><input type="text" name="TenDVT" value="{{ u.TenDVT }}" required></td>
+                  <td class="text-center">{{ u.SoLoai }}</td>
+                  <td class="text-right" style="white-space:nowrap;">
+                    <button type="submit" class="btn btn-outline btn-sm">Lưu</button>
+                    <button type="submit" name="action" value="delete_unit" class="btn btn-danger btn-sm"
+                            {{ 'disabled title="Đơn vị tính đang được loại sản phẩm sử dụng, không thể xóa"' if u.SoLoai > 0 else '' }}
+                            onclick="return confirm('Xóa đơn vị tính {{ u.MaDVT }}?');">
+                      Xóa
+                    </button>
+                  </td>
+                </form>
+              {% else %}
+                <td><strong>{{ u.MaDVT }}</strong></td>
+                <td><strong>{{ u.TenDVT }}</strong></td>
+                <td class="text-center">{{ u.SoLoai }}</td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 {% endblock %}

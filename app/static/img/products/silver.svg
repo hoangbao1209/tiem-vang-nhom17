@@ -1,18 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#fafbfd"/>
-      <stop offset="100%" stop-color="#e3e8f0"/>
-    </linearGradient>
+    <radialGradient id="studio" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="65%" stop-color="#f1f4f9"/>
+      <stop offset="100%" stop-color="#dce2ec"/>
+    </radialGradient>
     <linearGradient id="silver" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="50%" stop-color="#b8c2d1"/>
-      <stop offset="100%" stop-color="#6e7889"/>
+      <stop offset="35%" stop-color="#d4dce8"/>
+      <stop offset="72%" stop-color="#8b96a8"/>
+      <stop offset="100%" stop-color="#535d6e"/>
     </linearGradient>
+    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#3c4657" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#3c4657" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="320" height="240" rx="16" fill="url(#bg)"/>
-  <circle cx="160" cy="130" r="54" fill="none" stroke="url(#silver)" stroke-width="16"/>
-  <circle cx="160" cy="130" r="54" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.8"/>
-  <circle cx="160" cy="72" r="14" fill="#e8f4ff" stroke="#7d899c" stroke-width="3"/>
-  <text x="160" y="136" font-family="Georgia, serif" font-size="14" fill="#596375" text-anchor="middle">S925</text>
+  <rect width="400" height="300" fill="url(#studio)"/>
+  <ellipse cx="200" cy="240" rx="84" ry="14" fill="url(#shadow)"/>
+  <circle cx="200" cy="164" r="64" fill="none" stroke="url(#silver)" stroke-width="18"/>
+  <circle cx="200" cy="164" r="71" fill="none" stroke="#ffffff" stroke-width="1.8" opacity="0.85"/>
+  <circle cx="200" cy="164" r="56" fill="none" stroke="#6f7a8c" stroke-width="1.5" opacity="0.45"/>
+  <circle cx="200" cy="96" r="16" fill="#eef6ff" stroke="#7c8799" stroke-width="3"/>
+  <circle cx="200" cy="96" r="8" fill="#ffffff" opacity="0.88"/>
+  <text x="200" y="170" font-family="Georgia, serif" font-size="14" font-weight="bold" fill="#5e687a" text-anchor="middle" letter-spacing="2">S925</text>
 </svg>

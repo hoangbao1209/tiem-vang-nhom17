@@ -3,25 +3,37 @@
 <div class="page-header">
   <div>
     <h1>Danh sách Sản phẩm</h1>
-    <div style="color:var(--slate-500);font-size:0.9rem;">Đơn giá bán được tự động tính = Đơn giá mua × (1 + % lợi nhuận của loại sản phẩm).</div>
+    <div class="page-subtitle">Quản lý danh mục trang sức, đơn giá mua hiện hành và tình trạng kinh doanh. Sản phẩm đã phát sinh giao dịch chỉ chuyển sang Ngừng kinh doanh để bảo toàn lịch sử.</div>
   </div>
-  <a class="btn btn-primary" href="{{ url_for('admin.product_edit') }}">+ Thêm sản phẩm mới</a>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <a class="btn btn-outline" href="{{ url_for('admin.inventory_lookup') }}">🔍 Tra cứu tồn kho</a>
+    <a class="btn btn-primary" href="{{ url_for('admin.product_edit') }}">+ Thêm sản phẩm mới</a>
+  </div>
 </div>
 
 <div class="card">
-  <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
-    <input type="text" name="q" value="{{ q }}" placeholder="Tìm tên, mã SP, chất liệu..." style="max-width:250px;">
-    <select name="loai" style="max-width:210px;">
-      <option value="">-- Tất cả loại sản phẩm --</option>
-      {% for c in categories %}
-        <option value="{{ c.MaLoaiSP }}" {{ 'selected' if loai == c.MaLoaiSP else '' }}>{{ c.TenLoaiSP }} (+{{ c.PhanTramLoiNhuan|plain }}%)</option>
-      {% endfor %}
-    </select>
-    <select name="tinh_trang" style="max-width:190px;">
-      <option value="">-- Tất cả tình trạng --</option>
-      <option value="Đang kinh doanh" {{ 'selected' if tinh_trang == 'Đang kinh doanh' else '' }}>Đang kinh doanh</option>
-      <option value="Ngừng kinh doanh" {{ 'selected' if tinh_trang == 'Ngừng kinh doanh' else '' }}>Ngừng kinh doanh</option>
-    </select>
+  <form method="get" class="filter-bar">
+    <div class="form-group" style="flex:1;min-width:210px;">
+      <label>Mã SP / Tên sản phẩm / Chất liệu</label>
+      <input type="text" name="q" value="{{ q }}" placeholder="VD: SP001, SJC, Vàng 18K...">
+    </div>
+    <div class="form-group">
+      <label>Loại sản phẩm</label>
+      <select name="loai">
+        <option value="">Tất cả loại</option>
+        {% for c in categories %}
+          <option value="{{ c.MaLoaiSP }}" {{ 'selected' if loai == c.MaLoaiSP else '' }}>{{ c.TenLoaiSP }} (+{{ c.PhanTramLoiNhuan|pct }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Tình trạng</label>
+      <select name="tinh_trang">
+        <option value="">Tất cả</option>
+        <option value="Đang kinh doanh" {{ 'selected' if tinh_trang == 'Đang kinh doanh' else '' }}>Đang kinh doanh</option>
+        <option value="Ngừng kinh doanh" {{ 'selected' if tinh_trang == 'Ngừng kinh doanh' else '' }}>Ngừng kinh doanh</option>
+      </select>
+    </div>
     <button type="submit" class="btn btn-dark">Lọc</button>
     <a class="btn btn-outline" href="{{ url_for('admin.products_admin') }}">Đặt lại</a>
   </form>
@@ -30,13 +42,14 @@
     <table class="table">
       <thead>
         <tr>
+          <th>STT</th>
           <th>Mã SP</th>
           <th>Sản phẩm &amp; Quy cách</th>
-          <th>Loại SP</th>
+          <th>Loại SP (% lợi nhuận)</th>
           <th>ĐVT</th>
           <th class="text-right">Đơn giá mua</th>
           <th class="text-right">Đơn giá bán</th>
-          <th class="text-center">Tồn kho</th>
+          <th class="text-center">Tồn</th>
           <th class="text-center">Tình trạng</th>
           <th class="text-right">Thao tác</th>
         </tr>
@@ -44,30 +57,31 @@
       <tbody>
         {% for p in rows %}
           <tr>
-            <td><strong>{{ p.MaCode or ('SP' ~ p.MaSP) }}</strong></td>
+            <td>{{ loop.index }}</td>
+            <td><strong>{{ p.MaSP }}</strong></td>
             <td>
               <div style="display:flex;align-items:center;gap:10px;">
-                <img src="{{ product_img(p) }}" alt="" style="width:46px;height:36px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;">
+                <img src="{{ product_img(p) }}" alt="" style="width:48px;height:36px;object-fit:cover;border-radius:7px;border:1px solid var(--border);">
                 <div>
                   <strong>{{ p.TenSP }}</strong>
-                  <div style="font-size:0.78rem;color:var(--slate-500);">
+                  <div style="font-size:0.76rem;color:var(--slate-500);">
                     {{ p.ChatLieu or '—' }}{% if p.TuoiVang %} • {{ p.TuoiVang }}{% endif %}{% if p.TrongLuong %} • {{ p.TrongLuong }}{% endif %}
                   </div>
                 </div>
               </div>
             </td>
-            <td>{{ p.TenLoaiSP }} <span class="badge badge-gold">+{{ p.PhanTramLoiNhuan|plain }}%</span></td>
+            <td>{{ p.TenLoaiSP }} <span class="badge badge-gold">+{{ p.PhanTramLoiNhuan|pct }}</span></td>
             <td>{{ p.TenDVT }}</td>
             <td class="text-right">{{ p.DonGiaMua|vnd }}</td>
             <td class="text-right" style="font-weight:700;color:var(--gold-600);">{{ p.DonGiaBan|vnd }}</td>
-            <td class="text-center"><strong>{{ p.SoLuongTon }}</strong></td>
+            <td class="text-center"><strong>{{ p.SoLuongTon|qty }}</strong></td>
             <td class="text-center">
               <span class="badge {{ 'badge-success' if p.TinhTrang == 'Đang kinh doanh' else 'badge-danger' }}">
                 {{ p.TinhTrang }}
               </span>
               {% if p.TinhTrang == 'Đang kinh doanh' %}
-                <div style="font-size:0.74rem;color:{{ 'var(--success)' if p.HienThi else 'var(--slate-500)' }};margin-top:3px;">
-                  {{ 'Đang hiện trên web' if p.HienThi else 'Đang ẩn khỏi web' }}
+                <div style="font-size:0.72rem;color:{{ 'var(--emerald)' if p.HienThi else 'var(--slate-500)' }};margin-top:3px;">
+                  {{ 'Hiển thị trên web' if p.HienThi else 'Ẩn khỏi web' }}
                 </div>
               {% endif %}
             </td>
@@ -78,16 +92,16 @@
                   {{ 'Ngừng KD' if p.TinhTrang == 'Đang kinh doanh' else 'Mở lại' }}
                 </button>
               </form>
-              <form action="{{ url_for('admin.product_delete', ma_sp=p.MaSP) }}" method="post" style="display:inline;" onsubmit="return confirm('Xóa vĩnh viễn sản phẩm này?');">
+              <form action="{{ url_for('admin.product_delete', ma_sp=p.MaSP) }}" method="post" style="display:inline;" onsubmit="return confirm('Xóa vĩnh viễn sản phẩm {{ p.MaSP }}?');">
                 <button type="submit" class="btn btn-danger btn-sm"
-                        {{ 'disabled title="Sản phẩm đã phát sinh giao dịch, chỉ có thể Ngừng kinh doanh"' if p.DaPhatSinh else '' }}>
+                        {{ 'disabled title="Sản phẩm đã phát sinh chứng từ mua/bán/kiểm kê, không thể xóa vật lý"' if p.DaPhatSinh else '' }}>
                   Xóa
                 </button>
               </form>
             </td>
           </tr>
         {% else %}
-          <tr><td colspan="9" class="text-center">Không tìm thấy sản phẩm phù hợp.</td></tr>
+          <tr><td colspan="10" class="text-center">Không tìm thấy sản phẩm phù hợp.</td></tr>
         {% endfor %}
       </tbody>
     </table>

@@ -2,21 +2,37 @@
 {% block title %}{{ p.TenSP }} – {{ store.TenCuaHang }}{% endblock %}
 {% block content %}
 <div class="container section">
-  <div class="card">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:28px;align-items:start;">
-      <div class="product-thumb" style="border-radius:12px;border:1px solid #ede3ce;">
-        <img src="{{ product_img(p) }}" alt="{{ p.TenSP }}">
-      </div>
-      <div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <span class="badge badge-gold">{{ p.TenLoaiSP }}</span>
-          <span style="font-size:0.85rem;color:var(--slate-500);">Mã sản phẩm: <strong>{{ p.MaCode or ('SP' ~ p.MaSP) }}</strong></span>
+  <div style="margin-bottom:14px;font-size:0.85rem;color:var(--slate-500);">
+    <a href="{{ url_for('shop.index') }}">Trang chủ</a> &nbsp;/&nbsp;
+    <a href="{{ url_for('shop.products', loai=p.MaLoaiSP) }}">{{ p.TenLoaiSP }}</a> &nbsp;/&nbsp;
+    <span style="color:var(--ink);font-weight:600;">{{ p.TenSP }}</span>
+  </div>
+
+  <div class="card" style="padding:28px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:34px;align-items:start;">
+      <div class="product-3d-wrap">
+        <div id="product-3d-stage" class="product-3d-stage">
+          <span class="viewer-3d-hint">✦ Di chuột để ngắm góc 3D</span>
+          <img src="{{ product_img(p) }}" alt="{{ p.TenSP }}">
         </div>
-        <h1 style="margin:10px 0 8px;font-size:1.75rem;">{{ p.TenSP }}</h1>
-        <div style="font-size:1.7rem;font-weight:800;color:var(--gold-600);margin-bottom:12px;">
+        <div class="viewer-3d-bar">
+          <button type="button" id="btn-toggle-3d" class="btn btn-outline btn-sm">✦ Xoay trưng bày 3D</button>
+          <button type="button" id="btn-toggle-zoom" class="btn btn-outline btn-sm">🔍 Soi cận cảnh</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+          <span class="badge badge-gold">{{ p.TenLoaiSP }}</span>
+          <span class="badge badge-dark">{{ p.MaSP }}</span>
+        </div>
+        <h1 style="margin:0 0 10px;font-size:1.9rem;line-height:1.25;">{{ p.TenSP }}</h1>
+        <div class="num" style="font-size:1.85rem;font-weight:800;color:var(--gold-600);margin-bottom:14px;">
           {{ p.DonGiaBan|vnd }} <span style="font-size:0.95rem;font-weight:500;color:var(--slate-500);">/ {{ p.TenDVT }}</span>
         </div>
-        <p style="color:var(--slate-700);">{{ p.MoTa or 'Sản phẩm kim hoàn chính hãng, đầy đủ tem kiểm định và hóa đơn bảo hành tại cửa hàng.' }}</p>
+        <p style="color:var(--slate-700);margin:0 0 18px;">
+          {{ p.MoTa or 'Sản phẩm kim hoàn cao cấp, đầy đủ tem kiểm định và hóa đơn bảo hành tại cửa hàng.' }}
+        </p>
 
         <div class="spec-grid">
           <div class="spec-item">
@@ -32,46 +48,57 @@
             <strong>{{ p.TrongLuong or 'Theo sản phẩm thực tế' }}</strong>
           </div>
           <div class="spec-item">
-            <span>Đơn vị tính & Kho</span>
+            <span>Tình trạng kho</span>
             <strong>
               {% if p.SoLuongTon > 0 %}
-                <span style="color:var(--success);">Còn {{ p.SoLuongTon }} {{ p.TenDVT }}</span>
+                <span style="color:var(--emerald);">Còn {{ p.SoLuongTon|qty }} {{ p.TenDVT }}</span>
               {% else %}
-                <span style="color:var(--danger);">Tạm hết hàng</span>
+                <span style="color:var(--ruby);">Tạm hết hàng</span>
               {% endif %}
             </strong>
           </div>
           <div class="spec-item" style="grid-column:1 / -1;">
-            <span>Chính sách bảo hành & Thu đổi</span>
-            <strong>{{ p.BaoHanh or 'Bảo hành làm sạch & đánh bóng trọn đời tại cửa hàng' }}</strong>
+            <span>Chính sách bảo hành &amp; thu đổi</span>
+            <strong>{{ p.BaoHanh or 'Bảo hành làm sạch & đánh bóng miễn phí trọn đời tại cửa hàng' }}</strong>
           </div>
         </div>
 
         {% if p.SoLuongTon > 0 %}
-          <form action="{{ url_for('shop.cart_add') }}" method="post" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <form action="{{ url_for('shop.cart_add') }}" method="post" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:20px;">
             <input type="hidden" name="MaSP" value="{{ p.MaSP }}">
-            <label style="font-weight:600;">Số lượng:</label>
-            <input type="number" name="SoLuong" value="1" min="1" max="{{ p.SoLuongTon }}" style="width:90px;">
-            <button type="submit" class="btn btn-outline">🛒 Thêm vào giỏ</button>
-            <button type="submit" name="buy_now" value="1" class="btn btn-primary">Mua ngay</button>
+            <div class="qty-stepper">
+              <button type="button" onclick="stepQty(this, -1)">−</button>
+              <input type="number" name="SoLuong" value="1" min="1" max="{{ p.SoLuongTon|int if p.SoLuongTon >= 1 else 1 }}">
+              <button type="button" onclick="stepQty(this, 1)">+</button>
+            </div>
+            <button type="submit" class="btn btn-outline">🛒 Thêm vào giỏ hàng</button>
+            <button type="submit" name="buy_now" value="1" class="btn btn-primary">Đặt giữ &amp; Mua ngay</button>
           </form>
+        {% else %}
+          <div class="alert alert-info" style="margin-top:16px;">
+            <span>Sản phẩm tạm hết hàng. Quý khách vui lòng liên hệ {{ store.SoDienThoai }} để đặt trước.</span>
+          </div>
         {% endif %}
       </div>
     </div>
   </div>
 
   {% if related %}
-    <div class="section">
-      <h2>Sản phẩm cùng danh mục</h2>
+    <div class="section" style="margin-top:36px;">
+      <div class="section-head">
+        <h2>Thiết kế cùng danh mục</h2>
+        <a href="{{ url_for('shop.products', loai=p.MaLoaiSP) }}" style="color:var(--gold-600);font-weight:600;">Xem thêm →</a>
+      </div>
       <div class="product-grid">
         {% for r in related %}
-          <div class="product-card">
+          <div class="product-card tilt-3d reveal-3d">
             <a class="product-thumb" href="{{ url_for('shop.product_detail', ma_sp=r.MaSP) }}">
+              <span class="product-code-pill">{{ r.MaSP }}</span>
               <img src="{{ product_img(r) }}" alt="{{ r.TenSP }}">
             </a>
             <div class="product-body">
               <a class="product-title" href="{{ url_for('shop.product_detail', ma_sp=r.MaSP) }}">{{ r.TenSP }}</a>
-              <div style="font-size:0.8rem;color:var(--slate-500);margin-bottom:4px;">{{ r.ChatLieu or r.TenLoaiSP }}</div>
+              <div class="product-spec-line">{{ r.ChatLieu or r.TenLoaiSP }}</div>
               <div class="product-price">{{ r.DonGiaBan|vnd }}</div>
             </div>
           </div>

@@ -2,8 +2,14 @@
 {% block title %}Giỏ hàng – {{ store.TenCuaHang }}{% endblock %}
 {% block content %}
 <div class="container section">
-  <div class="card">
-    <h1 style="margin-top:0;">Giỏ hàng của bạn</h1>
+  <div class="card" style="padding:26px;">
+    <div class="section-head" style="margin-bottom:18px;">
+      <div>
+        <h1 style="margin:0;font-size:1.75rem;">Giỏ hàng của bạn</h1>
+        <div class="section-sub">Kiểm tra lại số lượng và sản phẩm trước khi tiến hành đặt giữ hàng</div>
+      </div>
+    </div>
+
     {% if items %}
       <form action="{{ url_for('shop.cart_update') }}" method="post">
         <div class="table-wrap">
@@ -13,7 +19,7 @@
                 <th>Sản phẩm</th>
                 <th>Loại</th>
                 <th class="text-right">Đơn giá</th>
-                <th class="text-center" style="width:120px;">Số lượng</th>
+                <th class="text-center" style="width:130px;">Số lượng</th>
                 <th class="text-right">Thành tiền</th>
                 <th></th>
               </tr>
@@ -22,15 +28,20 @@
               {% for i in items %}
                 <tr>
                   <td>
-                    <a href="{{ url_for('shop.product_detail', ma_sp=i.MaSP) }}" style="font-weight:700;">{{ i.TenSP }}</a>
-                    <div style="font-size:0.8rem;color:var(--slate-500);">Tồn kho: {{ i.SoLuongTon }} {{ i.TenDVT }}</div>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                      <img src="{{ product_img(i) }}" alt="" style="width:56px;height:42px;object-fit:cover;border-radius:8px;border:1px solid var(--border);">
+                      <div>
+                        <a href="{{ url_for('shop.product_detail', ma_sp=i.MaSP) }}" style="font-weight:700;color:var(--obsidian);">{{ i.TenSP }}</a>
+                        <div style="font-size:0.78rem;color:var(--slate-500);">{{ i.MaSP }} • Tồn kho: {{ i.SoLuongTon|qty }} {{ i.TenDVT }}</div>
+                      </div>
+                    </div>
                   </td>
                   <td>{{ i.TenLoaiSP }}</td>
                   <td class="text-right">{{ i.DonGiaBan|vnd }}</td>
                   <td class="text-center">
-                    <input type="number" name="qty_{{ i.MaSP }}" value="{{ i.SoLuong }}" min="0" max="{{ i.SoLuongTon }}" style="width:80px;text-align:center;">
+                    <input type="number" name="qty_{{ i.MaSP }}" value="{{ i.SoLuong }}" min="0" max="{{ i.SoLuongTon|int if i.SoLuongTon >= 1 else 1 }}" style="width:82px;text-align:center;">
                   </td>
-                  <td class="text-right" style="font-weight:700;color:var(--gold-600);">{{ i.ThanhTien|vnd }}</td>
+                  <td class="text-right" style="font-weight:800;color:var(--gold-600);">{{ i.ThanhTien|vnd }}</td>
                   <td class="text-right">
                     <button type="submit" formaction="{{ url_for('shop.cart_remove', ma_sp=i.MaSP) }}" class="btn btn-danger btn-sm">Xóa</button>
                   </td>
@@ -39,24 +50,27 @@
             </tbody>
             <tfoot>
               <tr>
-                <th colspan="4" class="text-right">Tổng tiền:</th>
-                <th class="text-right" style="font-size:1.2rem;color:var(--gold-600);">{{ total|vnd }}</th>
+                <th colspan="4" class="text-right">Tổng tiền tạm tính:</th>
+                <th class="text-right" style="font-size:1.25rem;color:var(--gold-600);">{{ total|vnd }}</th>
                 <th></th>
               </tr>
             </tfoot>
           </table>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-top:18px;flex-wrap:wrap;gap:10px;">
-          <a class="btn btn-outline" href="{{ url_for('shop.products') }}">← Tiếp tục mua sắm</a>
-          <div style="display:flex;gap:10px;">
-            <button type="submit" class="btn btn-outline">Cập nhật số lượng</button>
+
+        <div style="display:flex;justify-content:space-between;margin-top:20px;flex-wrap:wrap;gap:12px;">
+          <a class="btn btn-outline" href="{{ url_for('shop.products') }}">← Tiếp tục xem sản phẩm</a>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button type="submit" class="btn btn-outline">Cập nhật giỏ hàng</button>
             <a class="btn btn-primary" href="{{ url_for('shop.checkout') }}">Tiến hành đặt hàng →</a>
           </div>
         </div>
       </form>
     {% else %}
-      <p>Giỏ hàng của bạn đang trống.</p>
-      <a class="btn btn-primary" href="{{ url_for('shop.products') }}">Khám phá sản phẩm</a>
+      <div class="text-center" style="padding:36px 12px;">
+        <p style="color:var(--slate-500);margin-bottom:18px;">Giỏ hàng của bạn hiện đang trống.</p>
+        <a class="btn btn-primary" href="{{ url_for('shop.products') }}">Khám phá bộ sưu tập</a>
+      </div>
     {% endif %}
   </div>
 </div>

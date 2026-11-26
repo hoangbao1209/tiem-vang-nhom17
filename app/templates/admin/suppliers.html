@@ -3,16 +3,17 @@
 <div class="page-header">
   <div>
     <h1>Danh sách Nhà cung cấp</h1>
-    <div style="color:var(--slate-500);font-size:0.9rem;">Quản lý thông tin đối tác cung cấp sản phẩm và trạng thái hợp tác.</div>
+    <div class="page-subtitle">Thêm mới, tìm kiếm, cập nhật thông tin đối tác. Nhà cung cấp đã có phiếu mua hàng không được xóa vật lý mà chỉ chuyển sang Ngừng hợp tác.</div>
   </div>
 </div>
 
 <div class="card">
-  <form method="post" style="display:grid;grid-template-columns:1.3fr 1fr 1.4fr 1fr auto;gap:10px;margin-bottom:16px;">
+  <h3 class="card-title">Thêm nhà cung cấp mới</h3>
+  <form method="post" class="inline-add-grid">
     <input type="hidden" name="action" value="save">
-    <input type="text" name="TenNCC" required placeholder="Tên nhà cung cấp mới...">
+    <input type="text" name="TenNCC" required placeholder="Tên nhà cung cấp *">
     <input type="text" name="SoDienThoai" placeholder="Số điện thoại">
-    <input type="text" name="DiaChi" placeholder="Địa chỉ">
+    <input type="text" name="DiaChi" placeholder="Địa chỉ liên hệ">
     <select name="TinhTrang">
       <option value="Đang hợp tác">Đang hợp tác</option>
       <option value="Ngừng hợp tác">Ngừng hợp tác</option>
@@ -20,14 +21,20 @@
     <button type="submit" class="btn btn-primary">+ Thêm NCC</button>
   </form>
 
-  <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
-    <input type="text" name="q" value="{{ q }}" placeholder="Tìm tên, SĐT, địa chỉ..." style="max-width:260px;">
-    <select name="tinh_trang" style="max-width:200px;">
-      <option value="">-- Tất cả trạng thái --</option>
-      <option value="Đang hợp tác" {{ 'selected' if tinh_trang == 'Đang hợp tác' else '' }}>Đang hợp tác</option>
-      <option value="Ngừng hợp tác" {{ 'selected' if tinh_trang == 'Ngừng hợp tác' else '' }}>Ngừng hợp tác</option>
-    </select>
-    <button type="submit" class="btn btn-dark">Lọc</button>
+  <form method="get" class="filter-bar">
+    <div class="form-group" style="flex:1;min-width:210px;">
+      <label>Tìm mã NCC / Tên / SĐT / Địa chỉ</label>
+      <input type="text" name="q" value="{{ q }}" placeholder="VD: NCC001, Kim Phát, 028...">
+    </div>
+    <div class="form-group">
+      <label>Trạng thái hợp tác</label>
+      <select name="tinh_trang">
+        <option value="">Tất cả</option>
+        <option value="Đang hợp tác" {{ 'selected' if tinh_trang == 'Đang hợp tác' else '' }}>Đang hợp tác</option>
+        <option value="Ngừng hợp tác" {{ 'selected' if tinh_trang == 'Ngừng hợp tác' else '' }}>Ngừng hợp tác</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-dark">Tìm kiếm</button>
     <a class="btn btn-outline" href="{{ url_for('admin.suppliers_admin') }}">Đặt lại</a>
   </form>
 
@@ -35,12 +42,13 @@
     <table class="table">
       <thead>
         <tr>
+          <th>STT</th>
           <th>Mã NCC</th>
           <th>Tên nhà cung cấp</th>
           <th>Số điện thoại</th>
           <th>Địa chỉ</th>
           <th>Tình trạng</th>
-          <th class="text-center">Số phiếu mua</th>
+          <th class="text-center">Số phiếu</th>
           <th class="text-right">Tổng tiền mua</th>
           <th class="text-right">Thao tác</th>
         </tr>
@@ -51,7 +59,8 @@
             <form method="post">
               <input type="hidden" name="action" value="save">
               <input type="hidden" name="MaNCC" value="{{ r.MaNCC }}">
-              <td><strong>NCC{{ '%03d'|format(r.MaNCC) }}</strong></td>
+              <td>{{ loop.index }}</td>
+              <td><strong>{{ r.MaNCC }}</strong></td>
               <td><input type="text" name="TenNCC" value="{{ r.TenNCC }}" required></td>
               <td><input type="text" name="SoDienThoai" value="{{ r.SoDienThoai or '' }}"></td>
               <td><input type="text" name="DiaChi" value="{{ r.DiaChi or '' }}"></td>
@@ -66,15 +75,15 @@
               <td class="text-right" style="white-space:nowrap;">
                 <button type="submit" class="btn btn-outline btn-sm">Lưu</button>
                 <button type="submit" name="action" value="delete" class="btn btn-danger btn-sm"
-                        {{ 'disabled title="Nhà cung cấp đã phát sinh phiếu mua hàng, chỉ có thể Ngừng hợp tác"' if r.SoPhieu > 0 else '' }}
-                        onclick="return confirm('Xóa nhà cung cấp này?');">
+                        {{ 'disabled title="Nhà cung cấp đã có phiếu mua hàng, chỉ có thể chuyển Ngừng hợp tác"' if r.SoPhieu > 0 else '' }}
+                        onclick="return confirm('Xóa vĩnh viễn nhà cung cấp {{ r.MaNCC }}?');">
                   Xóa
                 </button>
               </td>
             </form>
           </tr>
         {% else %}
-          <tr><td colspan="8" class="text-center">Không tìm thấy nhà cung cấp phù hợp.</td></tr>
+          <tr><td colspan="9" class="text-center">Không tìm thấy nhà cung cấp phù hợp.</td></tr>
         {% endfor %}
       </tbody>
     </table>

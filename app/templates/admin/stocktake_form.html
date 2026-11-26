@@ -3,7 +3,7 @@
 <div class="page-header">
   <div>
     <h1>Lập Phiếu kiểm kê kho</h1>
-    <div style="color:var(--slate-500);font-size:0.9rem;">Hệ thống ghi nhận tồn kho tại thời điểm kiểm kê. Nếu có chênh lệch giữa thực tế và hệ thống, vui lòng nhập rõ lý do.</div>
+    <div class="page-subtitle">Hệ thống chụp số lượng tồn hiện tại để đối chiếu. Nếu tồn thực tế khác tồn hệ thống, bắt buộc ghi rõ lý do chênh lệch.</div>
   </div>
   <a class="btn btn-outline" href="{{ url_for('admin.stocktakes') }}">← Danh sách phiếu kiểm kê</a>
 </div>
@@ -11,17 +11,22 @@
 <form method="post" class="card">
   <div class="form-grid" style="margin-bottom:16px;">
     <div class="form-group">
-      <label>Ngày kiểm kê *</label>
+      <label>Ngày kiểm kê <span class="req">*</span></label>
       <input type="date" name="NgayKiemKe" value="{{ today }}" max="{{ today }}" required>
     </div>
     <div class="form-group">
       <label>Người thực hiện kiểm kê</label>
-      <input type="text" value="{{ g.user.HoTen }}" readonly>
+      <input type="text" value="{{ g.user.MaNV }} – {{ g.user.TenNV }}" readonly>
     </div>
     <div class="form-group">
       <label>Ghi chú đợt kiểm kê</label>
-      <input type="text" name="GhiChu" placeholder="Ví dụ: Kiểm kê định kỳ cuối tháng...">
+      <input type="text" name="GhiChu" placeholder="VD: Kiểm kê định kỳ cuối tháng...">
     </div>
+  </div>
+
+  <div class="card-title">
+    <span>Bảng đối chiếu số lượng từng sản phẩm</span>
+    <span id="stocktake-diff-count" class="badge badge-success">Tất cả đều khớp</span>
   </div>
 
   <div class="table-wrap">
@@ -30,20 +35,20 @@
         <tr>
           <th>STT</th>
           <th>Mã SP</th>
-          <th>Tên sản phẩm</th>
+          <th>Sản phẩm</th>
           <th>Loại SP</th>
           <th>ĐVT</th>
           <th class="text-center">Tồn hệ thống</th>
-          <th style="width:130px;">Tồn thực tế *</th>
+          <th style="width:130px;">Tồn thực tế <span class="req">*</span></th>
           <th class="text-center">Chênh lệch</th>
-          <th style="min-width:220px;">Lý do chênh lệch (bắt buộc nếu lệch)</th>
+          <th style="min-width:230px;">Lý do chênh lệch (bắt buộc nếu ≠ 0)</th>
         </tr>
       </thead>
       <tbody id="stocktake-items-body">
         {% for p in products %}
-          <tr data-ton="{{ p.SoLuongTon }}">
+          <tr data-ton="{{ p.SoLuongTon|qty }}">
             <td>{{ loop.index }}</td>
-            <td>{{ p.MaCode or ('SP' ~ p.MaSP) }}</td>
+            <td><strong>{{ p.MaSP }}</strong></td>
             <td>
               <input type="hidden" name="MaSP" value="{{ p.MaSP }}">
               <strong>{{ p.TenSP }}</strong>
@@ -53,13 +58,13 @@
             </td>
             <td>{{ p.TenLoaiSP }}</td>
             <td>{{ p.TenDVT }}</td>
-            <td class="text-center"><strong>{{ p.SoLuongTon }}</strong></td>
+            <td class="text-center"><strong>{{ p.SoLuongTon|qty }}</strong></td>
             <td>
-              <input type="number" name="TonThucTe" value="{{ p.SoLuongTon }}" min="0" required>
+              <input type="number" name="TonThucTe" value="{{ p.SoLuongTon|qty }}" min="0" step="any" required>
             </td>
             <td class="text-center cell-diff">0</td>
             <td>
-              <input type="text" name="LyDoChenhLech" placeholder="Không chênh lệch">
+              <input type="text" name="LyDoChenhLech" placeholder="Khớp số liệu">
             </td>
           </tr>
         {% endfor %}
@@ -67,8 +72,9 @@
     </table>
   </div>
 
-  <div style="margin-top:18px;display:flex;justify-content:flex-end;">
-    <button type="submit" class="btn btn-primary">Lưu phiếu kiểm kê kho</button>
+  <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:10px;">
+    <a class="btn btn-outline" href="{{ url_for('admin.stocktakes') }}">Hủy bỏ</a>
+    <button type="submit" class="btn btn-primary">Lưu biên bản kiểm kê</button>
   </div>
 </form>
 {% endblock %}

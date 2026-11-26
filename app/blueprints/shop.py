@@ -1,142 +1,120 @@
-"""Website bán hàng cho khách: xem sản phẩm, giỏ hàng, đặt hàng, tra cứu đơn."""
+"""Tầng Điều khiển Giao diện Khách hàng (Storefront – chỉ gọi tầng Services, không chứa SQL)."""
 import re
 from datetime import datetime
 
-from flask import (Blueprint, abort, flash, redirect, render_template, request, session,
-                   url_for)
+from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
 
 from ..db import get_db
-from ..services.catalog import PRODUCT_SELECT, get_product
-from ..services.settings import get_params
-from ..services.vouchers import NGUON_ONLINE, TT_CHO, lay_phieu_ban, tao_phieu_ban
-from ..utils import BusinessError, to_float, to_int
+from ..services import catalog as cat_svc
+from ..services import settings as set_svc
+from ..services import vouchers as vou_svc
+from ..utils import BusinessError, format_pct_num, to_int
 
 bp = Blueprint("shop", __name__)
 
 PHONE_RE = re.compile(r"^0\d{9,10}$")
-SORTS = {
-    "moi": "sp.MaSP DESC",
-    "gia-tang": "DonGiaBan ASC",
-    "gia-giam": "DonGiaBan DESC",
-    "ten": "sp.TenSP ASC",
-}
-SORT_LABELS = [("moi", "Mới nhất"), ("gia-tang", "Giá tăng dần"),
-               ("gia-giam", "Giá giảm dần"), ("ten", "Tên A → Z")]
 
 
 @bp.route("/")
 def index():
     db = get_db()
-    featured = db.execute(
-        PRODUCT_SELECT + " WHERE sp.HienThi = 1 AND sp.TinhTrang = 'Đang kinh doanh' "
-        "AND sp.SoLuongTon > 0 ORDER BY sp.MaSP DESC LIMIT 8"
-    ).fetchall()
-    categories = db.execute(
-        "SELECT l.MaLoaiSP, l.TenLoaiSP, COUNT(sp.MaSP) AS SoSP, MIN(sp.HinhAnh) AS HinhAnh "
-        "FROM LOAISANPHAM l LEFT JOIN SANPHAM sp ON sp.MaLoaiSP = l.MaLoaiSP "
-        "AND sp.HienThi = 1 AND sp.TinhTrang = 'Đang kinh doanh' "
-        "GROUP BY l.MaLoaiSP ORDER BY l.MaLoaiSP"
-    ).fetchall()
-    services = db.execute(
-        "SELECT * FROM LOAIDICHVU WHERE TinhTrang = 'Đang hoạt động' ORDER BY MaLoaiDV LIMIT 6"
-    ).fetchall()
-    ti_le = to_float(get_params(db).get("TiLeTraTruocToiThieu"), 50)
-    return render_template("shop/index.html", featured=featured, categories=categories,
-                           services=services, ti_le_tra_truoc=ti_le)
+    featured = cat_svc.lay_san_pham_noi_bat(db, limit=8)
+    categories = cat_svc.lay_danh_sach_loai_sp(db)
+    services = cat_svc.lay_danh_sach_dich_vu(db, tinh_trang="Đang hoạt động")[:6]
+    ti_le_pct = format_pct_num(set_svc.lay_tham_so(db)["TiLeTraTruoc"])
+    return render_template(
+        "shop/index.html",
+        featured=featured,
+        categories=categories,
+        services=services,
+        ti_le_tra_truoc=ti_le_pct,
+    )
 
 
 @bp.route("/san-pham")
 def products():
     db = get_db()
     q = request.args.get("q", "").strip()
-    loai = to_int(request.args.get("loai"))
+    loai = request.args.get("loai", "").strip()
     sort = request.args.get("sort", "moi")
     con_hang = request.args.get("con_hang") == "1"
 
-    where, args = ["sp.HienThi = 1", "sp.TinhTrang = 'Đang kinh doanh'"], []
-    if q:
-        where.append("(sp.TenSP LIKE ? OR l.TenLoaiSP LIKE ? OR sp.ChatLieu LIKE ? OR sp.MaCode LIKE ?)")
-        args += [f"%{q}%", f"%{q}%", f"%{q}%", f"%{q}%"]
-    if loai:
-        where.append("sp.MaLoaiSP = ?")
-        args.append(loai)
-    if con_hang:
-        where.append("sp.SoLuongTon > 0")
-    rows = db.execute(
-        PRODUCT_SELECT + " WHERE " + " AND ".join(where) + " ORDER BY " + SORTS.get(sort, SORTS["moi"]),
-        args,
-    ).fetchall()
-    current_cat = db.execute("SELECT * FROM LOAISANPHAM WHERE MaLoaiSP = ?", (loai,)).fetchone() if loai else None
-    return render_template("shop/products.html", products=rows, q=q, loai=loai, sort=sort,
-                           con_hang=con_hang, current_cat=current_cat, sorts=SORT_LABELS)
+    rows = cat_svc.tra_cuu_san_pham_cua_hang(db, q=q, ma_loai=loai, sort=sort, con_hang=con_hang)
+    current_cat = cat_svc.lay_loai_sp(db, loai) if loai else None
+    return render_template(
+        "shop/products.html",
+        products=rows,
+        q=q,
+        loai=loai,
+        sort=sort,
+        con_hang=con_hang,
+        current_cat=current_cat,
+        sorts=cat_svc.SORT_LABELS,
+    )
 
 
-@bp.route("/san-pham/<int:ma_sp>")
+@bp.route("/san-pham/<ma_sp>")
 def product_detail(ma_sp):
     db = get_db()
-    p = get_product(db, ma_sp)
+    p = cat_svc.lay_san_pham(db, ma_sp)
     if p is None or not p["HienThi"] or p["TinhTrang"] != "Đang kinh doanh":
         abort(404)
-    related = db.execute(
-        PRODUCT_SELECT + " WHERE sp.HienThi = 1 AND sp.TinhTrang = 'Đang kinh doanh' "
-        "AND sp.MaLoaiSP = ? AND sp.MaSP <> ? LIMIT 4",
-        (p["MaLoaiSP"], ma_sp),
-    ).fetchall()
+    related = cat_svc.lay_san_pham_lien_quan(db, p["MaLoaiSP"], ma_sp, limit=4)
     return render_template("shop/product_detail.html", p=p, related=related)
 
 
 @bp.route("/dich-vu")
 def dich_vu():
     db = get_db()
-    services = db.execute(
-        "SELECT * FROM LOAIDICHVU WHERE TinhTrang = 'Đang hoạt động' ORDER BY MaLoaiDV"
-    ).fetchall()
-    ti_le = to_float(get_params(db).get("TiLeTraTruocToiThieu"), 50)
-    return render_template("shop/services.html", services=services, ti_le_tra_truoc=ti_le)
+    services = cat_svc.lay_danh_sach_dich_vu(db, tinh_trang="Đang hoạt động")
+    ti_le_pct = format_pct_num(set_svc.lay_tham_so(db)["TiLeTraTruoc"])
+    return render_template("shop/services.html", services=services, ti_le_tra_truoc=ti_le_pct)
 
 
-def cart_items(db):
+def _cart_items(db):
     cart = session.get("cart", {})
-    items, total = [], 0
-    for ma, sl in cart.items():
-        p = get_product(db, int(ma))
+    items, total = [], 0.0
+    for ma_sp, sl in cart.items():
+        p = cat_svc.lay_san_pham(db, ma_sp)
         if p is None or not p["HienThi"] or p["TinhTrang"] != "Đang kinh doanh":
             continue
         item = dict(p)
         item["SoLuong"] = sl
-        item["ThanhTien"] = sl * p["DonGiaBan"]
+        item["ThanhTien"] = round(sl * p["DonGiaBan"], 2)
         items.append(item)
         total += item["ThanhTien"]
-    return items, total
+    return items, round(total, 2)
 
 
 @bp.route("/gio-hang")
 def cart():
-    items, total = cart_items(get_db())
+    items, total = _cart_items(get_db())
     return render_template("shop/cart.html", items=items, total=total)
 
 
 @bp.route("/gio-hang/them", methods=["POST"])
 def cart_add():
-    ma = to_int(request.form.get("MaSP"))
+    ma_sp = (request.form.get("MaSP") or "").strip()
     sl = max(to_int(request.form.get("SoLuong"), 1) or 1, 1)
-    p = get_product(get_db(), ma) if ma else None
+    p = cat_svc.lay_san_pham(get_db(), ma_sp) if ma_sp else None
     back = request.referrer or url_for("shop.products")
     if p is None or not p["HienThi"] or p["TinhTrang"] != "Đang kinh doanh":
         flash("Sản phẩm hiện không khả dụng.", "error")
         return redirect(back)
 
-    cart = session.get("cart", {})
-    new_qty = cart.get(str(ma), 0) + sl
     if p["SoLuongTon"] <= 0:
-        flash(f"“{p['TenSP']}” tạm hết hàng.", "error")
+        flash(f"“{p['TenSP']}” hiện tạm hết hàng.", "error")
         return redirect(back)
-    if new_qty > p["SoLuongTon"]:
-        new_qty = p["SoLuongTon"]
-        flash(f"“{p['TenSP']}” chỉ còn {p['SoLuongTon']} {p['TenDVT']}, giỏ hàng đã được điều chỉnh.", "info")
+
+    max_qty = int(p["SoLuongTon"]) if p["SoLuongTon"] >= 1 else 1
+    cart = session.get("cart", {})
+    new_qty = cart.get(ma_sp, 0) + sl
+    if new_qty > max_qty:
+        new_qty = max_qty
+        flash(f"“{p['TenSP']}” chỉ còn {p['SoLuongTon']:g} {p['TenDVT']}, số lượng giỏ hàng đã được điều chỉnh.", "info")
     else:
         flash(f"Đã thêm “{p['TenSP']}” vào giỏ hàng.", "success")
-    cart[str(ma)] = new_qty
+    cart[ma_sp] = new_qty
     session["cart"] = cart
 
     if request.form.get("buy_now"):
@@ -148,24 +126,23 @@ def cart_add():
 def cart_update():
     db = get_db()
     cart = session.get("cart", {})
-    for ma in list(cart.keys()):
-        qty = to_int(request.form.get(f"qty_{ma}"), cart[ma])
-        p = get_product(db, int(ma))
-        if p is None or qty is None or qty <= 0 or p["TinhTrang"] != "Đang kinh doanh":
-            cart.pop(ma)
+    for ma_sp in list(cart.keys()):
+        qty = to_int(request.form.get(f"qty_{ma_sp}"), cart[ma_sp])
+        p = cat_svc.lay_san_pham(db, ma_sp)
+        if p is None or qty is None or qty <= 0 or p["TinhTrang"] != "Đang kinh doanh" or p["SoLuongTon"] <= 0:
+            cart.pop(ma_sp, None)
             continue
-        cart[ma] = min(qty, p["SoLuongTon"]) if p["SoLuongTon"] > 0 else 0
-        if cart[ma] <= 0:
-            cart.pop(ma)
+        max_qty = int(p["SoLuongTon"]) if p["SoLuongTon"] >= 1 else 1
+        cart[ma_sp] = min(qty, max_qty)
     session["cart"] = cart
     flash("Đã cập nhật giỏ hàng.", "success")
     return redirect(url_for("shop.cart"))
 
 
-@bp.route("/gio-hang/xoa/<int:ma_sp>", methods=["POST"])
+@bp.route("/gio-hang/xoa/<ma_sp>", methods=["POST"])
 def cart_remove(ma_sp):
     cart = session.get("cart", {})
-    cart.pop(str(ma_sp), None)
+    cart.pop(ma_sp, None)
     session["cart"] = cart
     return redirect(url_for("shop.cart"))
 
@@ -173,9 +150,9 @@ def cart_remove(ma_sp):
 @bp.route("/thanh-toan", methods=["GET", "POST"])
 def checkout():
     db = get_db()
-    items, total = cart_items(db)
+    items, total = _cart_items(db)
     if not items:
-        flash("Giỏ hàng đang trống.", "info")
+        flash("Giỏ hàng của bạn đang trống.", "info")
         return redirect(url_for("shop.products"))
 
     form = request.form if request.method == "POST" else {}
@@ -183,7 +160,6 @@ def checkout():
         ten = form.get("TenKH", "").strip()
         sdt = form.get("SoDienThoai", "").strip().replace(" ", "")
         dia_chi = form.get("DiaChi", "").strip()
-        email = form.get("Email", "").strip()
         ghi_chu = form.get("GhiChu", "").strip()
         pttt = form.get("PhuongThucThanhToan", "Tiền mặt")
         if pttt not in ("Tiền mặt", "Chuyển khoản"):
@@ -191,9 +167,9 @@ def checkout():
 
         errors = []
         if not ten:
-            errors.append("Vui lòng nhập họ tên.")
+            errors.append("Vui lòng nhập họ và tên khách hàng.")
         if not PHONE_RE.match(sdt):
-            errors.append("Số điện thoại không hợp lệ (10–11 chữ số, bắt đầu bằng 0).")
+            errors.append("Số điện thoại không hợp lệ (10–11 chữ số, bắt đầu bằng số 0).")
         if not dia_chi:
             errors.append("Vui lòng nhập địa chỉ nhận hàng.")
         if errors:
@@ -201,14 +177,15 @@ def checkout():
                 flash(e, "error")
         else:
             try:
-                so = tao_phieu_ban(
+                so = vou_svc.tao_phieu_ban(
                     db,
-                    {"ten": ten, "sdt": sdt, "dia_chi": dia_chi, "email": email},
+                    {"ten": ten, "sdt": sdt, "dia_chi": dia_chi},
                     [{"MaSP": i["MaSP"], "SoLuong": i["SoLuong"]} for i in items],
                     datetime.now().strftime("%Y-%m-%d %H:%M"),
-                    nguon=NGUON_ONLINE,
-                    trang_thai=TT_CHO,
+                    nguon=vou_svc.NGUON_ONLINE,
+                    trang_thai=vou_svc.TT_CHO,
                     ghi_chu=ghi_chu,
+                    ma_nv=None,
                     pttt=pttt,
                 )
             except BusinessError as e:
@@ -220,11 +197,11 @@ def checkout():
     return render_template("shop/checkout.html", items=items, total=total, form=form)
 
 
-@bp.route("/dat-hang-thanh-cong/<int:so_phieu>")
+@bp.route("/dat-hang-thanh-cong/<so_phieu>")
 def order_success(so_phieu):
     if session.get("last_order") != so_phieu:
         abort(404)
-    p, lines = lay_phieu_ban(get_db(), so_phieu)
+    p, lines = vou_svc.lay_phieu_ban(get_db(), so_phieu)
     if p is None:
         abort(404)
     return render_template("shop/order_success.html", p=p, lines=lines)
@@ -232,12 +209,18 @@ def order_success(so_phieu):
 
 @bp.route("/tra-cuu-don-hang")
 def order_lookup():
-    so = to_int(request.args.get("so_phieu"))
-    sdt = request.args.get("sdt", "").strip().replace(" ", "")
+    so = (request.args.get("so_phieu") or "").strip().upper()
+    sdt = (request.args.get("sdt") or "").strip().replace(" ", "")
     p, lines, searched = None, [], bool(request.args)
     if so and sdt:
-        p, lines = lay_phieu_ban(get_db(), so)
-        if p is None or p["SoDienThoai"] != sdt:
+        p, lines = vou_svc.lay_phieu_ban(get_db(), so)
+        if p is None or (p["SoDienThoai"] or "").replace(" ", "") != sdt:
             p, lines = None, []
-    return render_template("shop/order_lookup.html", p=p, lines=lines, searched=searched,
-                           so_phieu=so or "", sdt=sdt)
+    return render_template(
+        "shop/order_lookup.html",
+        p=p,
+        lines=lines,
+        searched=searched,
+        so_phieu=so,
+        sdt=sdt,
+    )

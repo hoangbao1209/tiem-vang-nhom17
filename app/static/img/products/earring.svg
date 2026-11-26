@@ -1,28 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#fffdf8"/>
-      <stop offset="100%" stop-color="#f0e2c4"/>
-    </linearGradient>
+    <radialGradient id="studio" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#fffefb"/>
+      <stop offset="65%" stop-color="#f7f0e2"/>
+      <stop offset="100%" stop-color="#eadbc0"/>
+    </radialGradient>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ffe580"/>
-      <stop offset="100%" stop-color="#b58010"/>
+      <stop offset="0%" stop-color="#fff0a6"/>
+      <stop offset="50%" stop-color="#d9a530"/>
+      <stop offset="100%" stop-color="#8b5e08"/>
     </linearGradient>
-    <radialGradient id="pearl" cx="35%" cy="35%" r="65%">
+    <radialGradient id="pearl" cx="34%" cy="30%" r="68%">
       <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="70%" stop-color="#f2e8dc"/>
-      <stop offset="100%" stop-color="#cdbba7"/>
+      <stop offset="52%" stop-color="#f6efe5"/>
+      <stop offset="86%" stop-color="#d7c5b2"/>
+      <stop offset="100%" stop-color="#b8a18a"/>
+    </radialGradient>
+    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#5d451c" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#5d451c" stop-opacity="0"/>
     </radialGradient>
   </defs>
-  <rect width="320" height="240" rx="16" fill="url(#bg)"/>
-  <g transform="translate(105,50)">
-    <path d="M0,30 C0,5 25,5 25,25 L25,65" fill="none" stroke="url(#gold)" stroke-width="5" stroke-linecap="round"/>
-    <polygon points="25,65 35,82 25,95 15,82" fill="url(#gold)"/>
-    <circle cx="25" cy="118" r="22" fill="url(#pearl)" stroke="#d49e21" stroke-width="2"/>
+  <rect width="400" height="300" fill="url(#studio)"/>
+  <ellipse cx="155" cy="238" rx="34" ry="8" fill="url(#shadow)"/>
+  <ellipse cx="245" cy="248" rx="34" ry="8" fill="url(#shadow)"/>
+  <g transform="translate(128,58)">
+    <path d="M4,34 C4,4 32,4 32,28 L32,76" fill="none" stroke="url(#gold)" stroke-width="5" stroke-linecap="round"/>
+    <polygon points="32,72 44,92 32,108 20,92" fill="url(#gold)" stroke="#8c5f08" stroke-width="1.5"/>
+    <circle cx="32" cy="91" r="4" fill="#ffffff" opacity="0.85"/>
+    <circle cx="32" cy="136" r="27" fill="url(#pearl)" stroke="#c79527" stroke-width="1.8"/>
+    <ellipse cx="23" cy="126" rx="7" ry="4.5" fill="#ffffff" opacity="0.75" transform="rotate(-25 23 126)"/>
   </g>
-  <g transform="translate(175,62)">
-    <path d="M0,30 C0,5 25,5 25,25 L25,65" fill="none" stroke="url(#gold)" stroke-width="5" stroke-linecap="round"/>
-    <polygon points="25,65 35,82 25,95 15,82" fill="url(#gold)"/>
-    <circle cx="25" cy="118" r="22" fill="url(#pearl)" stroke="#d49e21" stroke-width="2"/>
+  <g transform="translate(218,70)">
+    <path d="M4,34 C4,4 32,4 32,28 L32,76" fill="none" stroke="url(#gold)" stroke-width="5" stroke-linecap="round"/>
+    <polygon points="32,72 44,92 32,108 20,92" fill="url(#gold)" stroke="#8c5f08" stroke-width="1.5"/>
+    <circle cx="32" cy="91" r="4" fill="#ffffff" opacity="0.85"/>
+    <circle cx="32" cy="136" r="27" fill="url(#pearl)" stroke="#c79527" stroke-width="1.8"/>
+    <ellipse cx="23" cy="126" rx="7" ry="4.5" fill="#ffffff" opacity="0.75" transform="rotate(-25 23 126)"/>
   </g>
 </svg>

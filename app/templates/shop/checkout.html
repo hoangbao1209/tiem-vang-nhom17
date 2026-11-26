@@ -1,73 +1,73 @@
 {% extends "base.html" %}
-{% block title %}Đặt hàng – {{ store.TenCuaHang }}{% endblock %}
+{% block title %}Đặt hàng trực tuyến – {{ store.TenCuaHang }}{% endblock %}
 {% block content %}
 <div class="container section">
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;">
-    <div class="card">
-      <h2 style="margin-top:0;">Thông tin nhận hàng & thanh toán</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:24px;align-items:start;">
+    <div class="card" style="padding:26px;">
+      <h2 style="margin:0 0 18px;">Thông tin khách hàng &amp; thanh toán</h2>
       <form method="post">
         <div class="form-group">
-          <label>Họ và tên khách hàng *</label>
+          <label>Họ và tên khách hàng <span class="req">*</span></label>
           <input type="text" name="TenKH" value="{{ form.get('TenKH', '') }}" required placeholder="Nguyễn Văn A">
         </div>
         <div class="form-group">
-          <label>Số điện thoại * (dùng để tra cứu đơn hàng)</label>
+          <label>Số điện thoại <span class="req">*</span> (dùng để tra cứu đơn hàng)</label>
           <input type="text" name="SoDienThoai" value="{{ form.get('SoDienThoai', '') }}" required placeholder="0901234567">
         </div>
         <div class="form-group">
-          <label>Địa chỉ nhận hàng *</label>
+          <label>Địa chỉ nhận hàng <span class="req">*</span></label>
           <input type="text" name="DiaChi" value="{{ form.get('DiaChi', '') }}" required placeholder="Số nhà, đường, phường/xã, quận/huyện...">
         </div>
         <div class="form-group">
-          <label>Email (không bắt buộc)</label>
-          <input type="email" name="Email" value="{{ form.get('Email', '') }}" placeholder="khachhang@email.com">
-        </div>
-        <div class="form-group">
-          <label>Phương thức thanh toán *</label>
+          <label>Phương thức thanh toán <span class="req">*</span></label>
           <select name="PhuongThucThanhToan">
-            <option value="Tiền mặt" {{ 'selected' if form.get('PhuongThucThanhToan') == 'Tiền mặt' else '' }}>Tiền mặt (Thanh toán khi nhận / tại quầy)</option>
+            <option value="Tiền mặt" {{ 'selected' if form.get('PhuongThucThanhToan') == 'Tiền mặt' else '' }}>Tiền mặt (Thanh toán tại quầy / khi nhận hàng)</option>
             <option value="Chuyển khoản" {{ 'selected' if form.get('PhuongThucThanhToan') == 'Chuyển khoản' else '' }}>Chuyển khoản ngân hàng</option>
           </select>
         </div>
         <div class="form-group">
           <label>Ghi chú đơn hàng</label>
-          <textarea name="GhiChu" rows="2" placeholder="Nhận tại quầy hoặc giao giờ hành chính...">{{ form.get('GhiChu', '') }}</textarea>
+          <textarea name="GhiChu" rows="2" placeholder="Nhận trực tiếp tại cửa hàng hoặc giao giờ hành chính...">{{ form.get('GhiChu', '') }}</textarea>
         </div>
-        <button type="submit" class="btn btn-primary" style="width:100%;margin-top:8px;">Xác nhận đặt hàng ({{ total|vnd }})</button>
+        <button type="submit" class="btn btn-primary" style="width:100%;padding:12px;margin-top:8px;">
+          Xác nhận đặt hàng ({{ total|vnd }})
+        </button>
       </form>
     </div>
 
-    <div class="card">
-      <h2 style="margin-top:0;">Chi tiết đơn hàng</h2>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Sản phẩm</th>
-            <th class="text-center">SL</th>
-            <th class="text-right">Thành tiền</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for i in items %}
+    <div class="card" style="padding:26px;">
+      <h2 style="margin:0 0 16px;">Tóm tắt đơn hàng</h2>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
             <tr>
-              <td>
-                <strong>{{ i.TenSP }}</strong>
-                <div style="font-size:0.78rem;color:var(--slate-500);">{{ i.ChatLieu or i.TenLoaiSP }}</div>
-              </td>
-              <td class="text-center">{{ i.SoLuong }} {{ i.TenDVT }}</td>
-              <td class="text-right">{{ i.ThanhTien|vnd }}</td>
+              <th>Sản phẩm</th>
+              <th class="text-center">SL</th>
+              <th class="text-right">Thành tiền</th>
             </tr>
-          {% endfor %}
-        </tbody>
-        <tfoot>
-          <tr>
-            <th colspan="2" class="text-right">Tổng thanh toán:</th>
-            <th class="text-right" style="font-size:1.15rem;color:var(--gold-600);">{{ total|vnd }}</th>
-          </tr>
-        </tfoot>
-      </table>
-      <p style="font-size:0.84rem;color:var(--slate-500);margin-top:12px;">
-        Sau khi xác nhận, hệ thống tự động tạo mã đơn hàng và giữ sản phẩm trong kho cho quý khách.
+          </thead>
+          <tbody>
+            {% for i in items %}
+              <tr>
+                <td>
+                  <strong>{{ i.TenSP }}</strong>
+                  <div style="font-size:0.78rem;color:var(--slate-500);">{{ i.MaSP }} • {{ i.ChatLieu or i.TenLoaiSP }}</div>
+                </td>
+                <td class="text-center">{{ i.SoLuong }} {{ i.TenDVT }}</td>
+                <td class="text-right" style="font-weight:700;">{{ i.ThanhTien|vnd }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="2" class="text-right">Tổng thanh toán:</th>
+              <th class="text-right" style="font-size:1.2rem;color:var(--gold-600);">{{ total|vnd }}</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p style="font-size:0.84rem;color:var(--slate-500);margin:14px 0 0;">
+        Ngay khi xác nhận, hệ thống sẽ tạo số phiếu đặt hàng chính thức và giữ sản phẩm trong kho cho quý khách.
       </p>
     </div>
   </div>

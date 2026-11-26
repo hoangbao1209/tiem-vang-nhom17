@@ -1,83 +1,105 @@
 {% extends "admin/base_admin.html" %}
 {% block content %}
 <div class="page-header no-print">
-  <h1>Chi tiết Phiếu bán hàng #{{ p.SoPhieu }}</h1>
+  <h1>Chi tiết Phiếu bán hàng {{ p.SoPhieuBan }}</h1>
   <div style="display:flex;gap:8px;flex-wrap:wrap;">
     {% if p.TrangThai == 'Chờ xử lý' %}
-      <form action="{{ url_for('admin.sale_complete', so_phieu=p.SoPhieu) }}" method="post">
+      <form action="{{ url_for('admin.sale_complete', so_phieu=p.SoPhieuBan) }}" method="post">
         <button type="submit" class="btn btn-success">✓ Xác nhận hoàn tất đơn</button>
       </form>
     {% endif %}
     {% if p.TrangThai != 'Đã hủy' %}
-      <form action="{{ url_for('admin.sale_cancel', so_phieu=p.SoPhieu) }}" method="post" onsubmit="return confirm('Hủy phiếu này và hoàn lại số lượng tồn kho?');">
+      <form action="{{ url_for('admin.sale_cancel', so_phieu=p.SoPhieuBan) }}" method="post" onsubmit="return confirm('Hủy phiếu bán hàng này và hoàn lại số lượng tồn kho?');">
         <button type="submit" class="btn btn-danger">Hủy phiếu &amp; Hoàn kho</button>
       </form>
     {% endif %}
-    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ In phiếu</button>
+    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ In hóa đơn</button>
     <a class="btn btn-outline" href="{{ url_for('admin.sales') }}">← Danh sách</a>
   </div>
 </div>
 
 <div class="card">
-  <div style="text-align:center;border-bottom:2px solid #eadfca;padding-bottom:14px;margin-bottom:16px;">
-    <div style="font-weight:800;font-size:1.1rem;">{{ store.TenCuaHang }}</div>
-    <h2 style="margin:6px 0;">PHIẾU BÁN HÀNG</h2>
+  <div class="voucher-sheet-head">
+    <div class="voucher-sheet-brand">{{ store.TenCuaHang }}</div>
+    <div style="font-size:0.82rem;color:var(--slate-500);">{{ store.DiaChi }} • ĐT: {{ store.SoDienThoai }}</div>
+    <h2 class="voucher-sheet-title">PHIẾU BÁN HÀNG</h2>
     <div>
-      Số phiếu: <strong>#{{ p.SoPhieu }}</strong> — Ngày lập: <strong>{{ p.NgayLap|date }}</strong> —
-      Nguồn: <strong>{{ p.Nguon }}</strong> — Trạng thái: <strong>{{ p.TrangThai }}</strong>
+      Số phiếu: <strong>{{ p.SoPhieuBan }}</strong> — Ngày lập: <strong>{{ p.NgayLap|date }}</strong> —
+      Nguồn: <strong>{{ p.Nguon }}</strong> —
+      Trạng thái: <span class="badge {{ 'badge-success' if p.TrangThai == 'Hoàn tất' else ('badge-danger' if p.TrangThai == 'Đã hủy' else 'badge-warning') }}">{{ p.TrangThai }}</span>
     </div>
   </div>
 
-  <div class="form-grid" style="margin-bottom:16px;">
-    <div><strong>Khách hàng:</strong> {{ p.TenKH }}</div>
+  <div class="form-grid" style="margin-bottom:18px;font-size:0.92rem;">
+    <div><strong>Khách hàng:</strong> {{ p.TenKhachHang or 'Khách lẻ' }}</div>
     <div><strong>Số điện thoại:</strong> {{ p.SoDienThoai or '—' }}</div>
     <div><strong>Địa chỉ:</strong> {{ p.DiaChi or '—' }}</div>
     <div><strong>Phương thức thanh toán:</strong> {{ p.PhuongThucThanhToan }}</div>
-    <div><strong>Nhân viên lập phiếu:</strong> {{ p.NguoiLap or 'Khách đặt Online' }}</div>
+    <div><strong>Nhân viên phụ trách:</strong> {{ p.NguoiLap or 'Khách đặt Online' }}</div>
     <div><strong>Ghi chú:</strong> {{ p.GhiChu or '—' }}</div>
   </div>
 
-  <table class="table">
-    <thead>
-      <tr>
-        <th>STT</th>
-        <th>Mã SP</th>
-        <th>Tên sản phẩm</th>
-        <th>Loại sản phẩm</th>
-        <th>Đơn vị tính</th>
-        <th class="text-center">Số lượng</th>
-        <th class="text-right">Đơn giá bán</th>
-        <th class="text-right">Thành tiền</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for l in lines %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
         <tr>
-          <td>{{ loop.index }}</td>
-          <td>{{ l.MaCode or ('SP' ~ l.MaSP) }}</td>
-          <td><strong>{{ l.TenSP }}</strong></td>
-          <td>{{ l.TenLoaiSP }}</td>
-          <td>{{ l.TenDVT }}</td>
-          <td class="text-center">{{ l.SoLuong }}</td>
-          <td class="text-right">{{ l.DonGiaBan|vnd }}</td>
-          <td class="text-right" style="font-weight:700;">{{ l.ThanhTien|vnd }}</td>
+          <th>STT</th>
+          <th>Mã SP</th>
+          <th>Tên sản phẩm</th>
+          <th>Loại sản phẩm</th>
+          <th>ĐVT</th>
+          <th class="text-center">Số lượng</th>
+          <th class="text-right">Đơn giá bán</th>
+          <th class="text-right">Thành tiền</th>
         </tr>
-      {% endfor %}
-    </tbody>
-    <tfoot>
-      <tr>
-        <th colspan="7" class="text-right">Tổng tiền thanh toán:</th>
-        <th class="text-right" style="font-size:1.2rem;color:var(--gold-600);">{{ p.TongTien|vnd }}</th>
-      </tr>
-      <tr>
-        <td colspan="7" class="text-right">Số tiền đã nhận ({{ p.PhuongThucThanhToan }}):</td>
-        <td class="text-right" style="font-weight:600;">{{ p.SoTienNhan|vnd }}</td>
-      </tr>
-      <tr>
-        <td colspan="7" class="text-right">Tiền thừa trả khách:</td>
-        <td class="text-right" style="font-weight:600;">{{ p.TienThua|vnd }}</td>
-      </tr>
-    </tfoot>
-  </table>
+      </thead>
+      <tbody>
+        {% for l in lines %}
+          <tr>
+            <td>{{ l.SoDong }}</td>
+            <td>{{ l.MaSP }}</td>
+            <td><strong>{{ l.TenSP }}</strong></td>
+            <td>{{ l.TenLoaiSP }}</td>
+            <td>{{ l.TenDVT }}</td>
+            <td class="text-center">{{ l.SoLuong|qty }}</td>
+            <td class="text-right">{{ l.DonGiaBan|vnd }}</td>
+            <td class="text-right" style="font-weight:700;">{{ l.ThanhTien|vnd }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="7" class="text-right">Tổng tiền thanh toán:</th>
+          <th class="text-right" style="font-size:1.22rem;color:var(--gold-600);">{{ p.TongTien|vnd }}</th>
+        </tr>
+        <tr>
+          <td colspan="7" class="text-right">Số tiền nhận ({{ p.PhuongThucThanhToan }}):</td>
+          <td class="text-right" style="font-weight:700;">{{ p.SoTienNhan|vnd }}</td>
+        </tr>
+        <tr>
+          <td colspan="7" class="text-right">Tiền thừa trả khách:</td>
+          <td class="text-right" style="font-weight:700;color:var(--emerald);">{{ p.TienThua|vnd }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="signature-grid">
+    <div class="signature-box">
+      <strong>Khách hàng</strong>
+      <span>(Ký, ghi rõ họ tên)</span>
+      <div class="signature-space"></div>
+    </div>
+    <div class="signature-box">
+      <strong>Nhân viên bán hàng</strong>
+      <span>{{ p.NguoiLap or '' }}</span>
+      <div class="signature-space"></div>
+    </div>
+    <div class="signature-box">
+      <strong>Cửa hàng trưởng</strong>
+      <span>(Xác nhận bảo hành)</span>
+      <div class="signature-space"></div>
+    </div>
+  </div>
 </div>
 {% endblock %}

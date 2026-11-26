@@ -3,26 +3,26 @@
 <div class="page-header">
   <div>
     <h1>Danh sách Phiếu bán hàng &amp; Đơn đặt hàng</h1>
-    <div style="color:var(--slate-500);font-size:0.9rem;">Quản lý hóa đơn bán trực tiếp tại quầy và đơn khách đặt hàng qua website.</div>
+    <div class="page-subtitle">Tra cứu hóa đơn bán tại quầy và xử lý đơn đặt giữ trực tuyến của khách hàng.</div>
   </div>
   <a class="btn btn-primary" href="{{ url_for('admin.sale_create') }}">+ Lập phiếu bán hàng</a>
 </div>
 
 <div class="card">
-  <form method="get" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:16px;">
-    <div class="form-group" style="margin:0;">
-      <label>Khách hàng / SĐT / Số phiếu</label>
-      <input type="text" name="q" value="{{ q }}" placeholder="Tên, SĐT hoặc số phiếu...">
+  <form method="get" class="filter-bar">
+    <div class="form-group" style="flex:1;min-width:190px;">
+      <label>Số phiếu / Khách hàng / SĐT</label>
+      <input type="text" name="q" value="{{ q }}" placeholder="VD: PB202611001, Nguyễn Văn An...">
     </div>
-    <div class="form-group" style="margin:0;">
-      <label>Nguồn</label>
+    <div class="form-group">
+      <label>Nguồn đơn</label>
       <select name="nguon">
         <option value="">Tất cả</option>
         <option value="Tại quầy" {{ 'selected' if nguon == 'Tại quầy' else '' }}>Tại quầy</option>
         <option value="Online" {{ 'selected' if nguon == 'Online' else '' }}>Online</option>
       </select>
     </div>
-    <div class="form-group" style="margin:0;">
+    <div class="form-group">
       <label>Thanh toán</label>
       <select name="pttt">
         <option value="">Tất cả</option>
@@ -30,7 +30,7 @@
         <option value="Chuyển khoản" {{ 'selected' if pttt == 'Chuyển khoản' else '' }}>Chuyển khoản</option>
       </select>
     </div>
-    <div class="form-group" style="margin:0;">
+    <div class="form-group">
       <label>Trạng thái</label>
       <select name="trang_thai">
         <option value="">Tất cả</option>
@@ -39,11 +39,11 @@
         <option value="Đã hủy" {{ 'selected' if trang_thai == 'Đã hủy' else '' }}>Đã hủy</option>
       </select>
     </div>
-    <div class="form-group" style="margin:0;">
+    <div class="form-group">
       <label>Từ ngày</label>
       <input type="date" name="tu_ngay" value="{{ tu_ngay }}">
     </div>
-    <div class="form-group" style="margin:0;">
+    <div class="form-group">
       <label>Đến ngày</label>
       <input type="date" name="den_ngay" value="{{ den_ngay }}">
     </div>
@@ -61,7 +61,7 @@
           <th>Khách hàng</th>
           <th>Nguồn</th>
           <th>Thanh toán</th>
-          <th>Người lập</th>
+          <th>Nhân viên</th>
           <th>Trạng thái</th>
           <th class="text-right">Tổng tiền</th>
           <th class="text-right">Thao tác</th>
@@ -71,9 +71,9 @@
         {% for r in rows %}
           <tr>
             <td>{{ loop.index }}</td>
-            <td><strong>#{{ r.SoPhieu }}</strong></td>
+            <td><strong>{{ r.SoPhieuBan }}</strong></td>
             <td>{{ r.NgayLap|date }}</td>
-            <td>{{ r.TenKH }}<br><small style="color:var(--slate-500);">{{ r.SoDienThoai or '' }}</small></td>
+            <td>{{ r.TenKhachHang or 'Khách lẻ' }}<br><small style="color:var(--slate-500);">{{ r.SoDienThoai or '' }}</small></td>
             <td><span class="badge {{ 'badge-info' if r.Nguon == 'Online' else 'badge-gold' }}">{{ r.Nguon }}</span></td>
             <td>{{ r.PhuongThucThanhToan }}</td>
             <td>{{ r.NguoiLap or 'Khách đặt Online' }}</td>
@@ -84,17 +84,17 @@
             </td>
             <td class="text-right" style="font-weight:700;color:var(--gold-600);">{{ r.TongTien|vnd }}</td>
             <td class="text-right">
-              <a class="btn btn-outline btn-sm" href="{{ url_for('admin.sale_detail', so_phieu=r.SoPhieu) }}">Xem phiếu</a>
+              <a class="btn btn-outline btn-sm" href="{{ url_for('admin.sale_detail', so_phieu=r.SoPhieuBan) }}">Xem phiếu</a>
             </td>
           </tr>
         {% else %}
-          <tr><td colspan="10" class="text-center">Chưa có phiếu bán hàng nào.</td></tr>
+          <tr><td colspan="10" class="text-center">Không tìm thấy phiếu bán hàng phù hợp.</td></tr>
         {% endfor %}
       </tbody>
       <tfoot>
         <tr>
           <th colspan="8" class="text-right">Tổng doanh thu hợp lệ ({{ rows|length }} phiếu):</th>
-          <th class="text-right" style="color:var(--gold-600);font-size:1.1rem;">{{ tong|vnd }}</th>
+          <th class="text-right" style="color:var(--gold-600);font-size:1.12rem;">{{ tong|vnd }}</th>
           <th></th>
         </tr>
       </tfoot>

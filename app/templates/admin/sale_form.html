@@ -1,24 +1,29 @@
 {% extends "admin/base_admin.html" %}
 {% block content %}
 <div class="page-header">
-  <h1>Lập Phiếu bán hàng tại quầy</h1>
+  <div>
+    <h1>Lập Phiếu bán hàng tại quầy</h1>
+    <div class="page-subtitle">Đơn giá bán được xác định tự động từ đơn giá mua và % lợi nhuận hiện hành của loại sản phẩm; hệ thống tự động kiểm tra tồn kho và tính tiền thừa.</div>
+  </div>
   <a class="btn btn-outline" href="{{ url_for('admin.sales') }}">← Danh sách phiếu bán</a>
 </div>
 
 <form method="post" class="card">
   <div class="form-grid">
     <div class="form-group">
-      <label>Chọn nhanh khách quen (tùy chọn)</label>
+      <label>Chọn nhanh khách đã giao dịch (tùy chọn)</label>
       <select id="quick-customer-select">
-        <option value="">-- Nhập khách mới hoặc chọn khách cũ --</option>
+        <option value="">-- Nhập khách mới hoặc chọn khách quen --</option>
         {% for c in customers %}
-          <option value="{{ c.MaKH }}" data-ten="{{ c.TenKH }}" data-sdt="{{ c.SoDienThoai or '' }}" data-diachi="{{ c.DiaChi or '' }}">{{ c.TenKH }} ({{ c.SoDienThoai or '—' }})</option>
+          <option value="{{ loop.index }}" data-ten="{{ c.TenKhachHang }}" data-sdt="{{ c.SoDienThoai or '' }}">
+            {{ c.TenKhachHang }}{% if c.SoDienThoai %} ({{ c.SoDienThoai }}){% endif %}
+          </option>
         {% endfor %}
       </select>
     </div>
     <div class="form-group">
-      <label>Họ tên khách hàng *</label>
-      <input type="text" name="TenKH" required placeholder="Nguyễn Văn A">
+      <label>Tên khách hàng</label>
+      <input type="text" name="TenKH" placeholder="Để trống nếu là Khách lẻ">
     </div>
     <div class="form-group">
       <label>Số điện thoại</label>
@@ -26,20 +31,20 @@
     </div>
     <div class="form-group">
       <label>Địa chỉ</label>
-      <input type="text" name="DiaChi" placeholder="Địa chỉ khách hàng">
+      <input type="text" name="DiaChi" placeholder="Địa chỉ khách hàng (nếu cần)">
     </div>
     <div class="form-group">
-      <label>Ngày lập phiếu *</label>
+      <label>Ngày lập phiếu <span class="req">*</span></label>
       <input type="date" name="NgayLap" value="{{ today }}" max="{{ today }}" required>
     </div>
     <div class="form-group">
       <label>Ghi chú</label>
-      <input type="text" name="GhiChu" placeholder="Ghi chú đơn hàng...">
+      <input type="text" name="GhiChu" placeholder="Ghi chú đơn bán...">
     </div>
   </div>
 
   <div class="card-title" style="margin-top:16px;">
-    <span>Chi tiết sản phẩm bán (Giá bán được tính tự động từ giá nhập và % lợi nhuận)</span>
+    <span>Chi tiết sản phẩm bán</span>
     <button type="button" class="btn btn-outline btn-sm" onclick="addVoucherRow('sale-items-body','sale-row-tpl')">+ Thêm dòng sản phẩm</button>
   </div>
 
@@ -47,11 +52,11 @@
     <table class="table">
       <thead>
         <tr>
-          <th style="min-width:260px;">Sản phẩm</th>
-          <th>Loại sản phẩm</th>
+          <th style="min-width:265px;">Sản phẩm <span class="req">*</span></th>
+          <th>Loại SP</th>
           <th>ĐVT</th>
           <th class="text-center">Tồn kho</th>
-          <th style="width:120px;">Số lượng</th>
+          <th style="width:120px;">Số lượng <span class="req">*</span></th>
           <th class="text-right">Đơn giá bán</th>
           <th class="text-right">Thành tiền</th>
           <th></th>
@@ -61,10 +66,10 @@
         <tr>
           <td>
             <select name="MaSP" required>
-              <option value="">-- Chọn sản phẩm còn tồn --</option>
+              <option value="">-- Chọn sản phẩm còn tồn kho --</option>
               {% for p in products %}
-                <option value="{{ p.MaSP }}" data-loai="{{ p.TenLoaiSP }}" data-dvt="{{ p.TenDVT }}" data-ton="{{ p.SoLuongTon }}" data-giaban="{{ p.DonGiaBan|plain }}">
-                  {{ p.MaCode or ('SP' ~ p.MaSP) }} – {{ p.TenSP }} ({{ p.DonGiaBan|vnd }})
+                <option value="{{ p.MaSP }}" data-loai="{{ p.TenLoaiSP }}" data-dvt="{{ p.TenDVT }}" data-ton="{{ p.SoLuongTon|qty }}" data-giaban="{{ p.DonGiaBan|plain }}">
+                  {{ p.MaSP }} – {{ p.TenSP }} ({{ p.DonGiaBan|vnd }})
                 </option>
               {% endfor %}
             </select>
@@ -72,7 +77,7 @@
           <td class="cell-loai">—</td>
           <td class="cell-dvt">—</td>
           <td class="text-center cell-ton">—</td>
-          <td><input type="number" name="SoLuong" value="1" min="1" required></td>
+          <td><input type="number" name="SoLuong" value="1" min="0.001" step="any" required></td>
           <td class="text-right cell-giaban">0 ₫</td>
           <td class="text-right cell-thanhtien" style="font-weight:700;">0 ₫</td>
           <td><button type="button" class="btn btn-danger btn-sm" onclick="removeVoucherRow(this)">✕</button></td>
@@ -81,33 +86,34 @@
       <tfoot>
         <tr>
           <th colspan="6" class="text-right">Tổng tiền thanh toán:</th>
-          <th class="text-right" id="voucher-total" data-raw="0" style="font-size:1.15rem;color:var(--gold-600);">0 ₫</th>
+          <th class="text-right" id="voucher-total" data-raw="0" style="font-size:1.2rem;color:var(--gold-600);">0 ₫</th>
           <th></th>
         </tr>
       </tfoot>
     </table>
   </div>
 
-  <div class="form-grid" style="margin-top:16px;padding:14px;background:var(--gold-50);border:1px solid #eadfca;border-radius:10px;align-items:end;">
+  <div class="form-grid" style="margin-top:16px;padding:16px;background:var(--gold-50);border:1px solid var(--border);border-radius:12px;align-items:end;">
     <div class="form-group" style="margin:0;">
-      <label>Phương thức thanh toán *</label>
+      <label>Phương thức thanh toán <span class="req">*</span></label>
       <select name="PhuongThucThanhToan" id="sale-pttt">
         <option value="Tiền mặt">Tiền mặt</option>
         <option value="Chuyển khoản">Chuyển khoản</option>
       </select>
     </div>
     <div class="form-group" style="margin:0;">
-      <label>Số tiền khách đưa (₫)</label>
+      <label>Số tiền nhận từ khách (₫) <span class="req">*</span></label>
       <input type="number" name="SoTienNhan" id="sale-so-tien-nhan" min="0" step="1" value="0" required>
     </div>
-    <div style="padding:8px 12px;background:#fff;border-radius:8px;border:1px solid #eadfca;">
-      <div style="font-size:0.8rem;color:var(--slate-500);">Tiền thừa trả khách</div>
-      <div id="sale-tien-thua" style="font-size:1.15rem;font-weight:800;color:var(--success);">0 ₫</div>
+    <div style="padding:10px 14px;background:#fff;border-radius:10px;border:1px solid var(--border);">
+      <div style="font-size:0.78rem;color:var(--slate-500);font-weight:600;text-transform:uppercase;">Tiền thừa trả khách</div>
+      <div id="sale-tien-thua" class="num" style="font-size:1.22rem;font-weight:800;color:var(--emerald);">0 ₫</div>
     </div>
   </div>
 
-  <div style="margin-top:18px;display:flex;justify-content:flex-end;">
-    <button type="submit" class="btn btn-primary">Lưu phiếu bán hàng</button>
+  <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:10px;">
+    <a class="btn btn-outline" href="{{ url_for('admin.sales') }}">Hủy bỏ</a>
+    <button type="submit" class="btn btn-primary">Xác nhận &amp; Lưu phiếu bán hàng</button>
   </div>
 </form>
 
@@ -115,10 +121,10 @@
   <tr>
     <td>
       <select name="MaSP" required>
-        <option value="">-- Chọn sản phẩm còn tồn --</option>
+        <option value="">-- Chọn sản phẩm còn tồn kho --</option>
         {% for p in products %}
-          <option value="{{ p.MaSP }}" data-loai="{{ p.TenLoaiSP }}" data-dvt="{{ p.TenDVT }}" data-ton="{{ p.SoLuongTon }}" data-giaban="{{ p.DonGiaBan|plain }}">
-            {{ p.MaCode or ('SP' ~ p.MaSP) }} – {{ p.TenSP }} ({{ p.DonGiaBan|vnd }})
+          <option value="{{ p.MaSP }}" data-loai="{{ p.TenLoaiSP }}" data-dvt="{{ p.TenDVT }}" data-ton="{{ p.SoLuongTon|qty }}" data-giaban="{{ p.DonGiaBan|plain }}">
+            {{ p.MaSP }} – {{ p.TenSP }} ({{ p.DonGiaBan|vnd }})
           </option>
         {% endfor %}
       </select>
@@ -126,7 +132,7 @@
     <td class="cell-loai">—</td>
     <td class="cell-dvt">—</td>
     <td class="text-center cell-ton">—</td>
-    <td><input type="number" name="SoLuong" value="1" min="1" required></td>
+    <td><input type="number" name="SoLuong" value="1" min="0.001" step="any" required></td>
     <td class="text-right cell-giaban">0 ₫</td>
     <td class="text-right cell-thanhtien" style="font-weight:700;">0 ₫</td>
     <td><button type="button" class="btn btn-danger btn-sm" onclick="removeVoucherRow(this)">✕</button></td>

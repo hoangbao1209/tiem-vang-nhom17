@@ -1,25 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#fffdf8"/>
-      <stop offset="100%" stop-color="#f3e5c8"/>
-    </linearGradient>
+    <radialGradient id="studio" cx="50%" cy="42%" r="65%">
+      <stop offset="0%" stop-color="#fffefb"/>
+      <stop offset="65%" stop-color="#f7f0e2"/>
+      <stop offset="100%" stop-color="#eadbc0"/>
+    </radialGradient>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ffe57f"/>
-      <stop offset="55%" stop-color="#d89f1e"/>
-      <stop offset="100%" stop-color="#8f6206"/>
+      <stop offset="0%" stop-color="#fff2ae"/>
+      <stop offset="38%" stop-color="#e0b040"/>
+      <stop offset="72%" stop-color="#b47d15"/>
+      <stop offset="100%" stop-color="#7c5206"/>
     </linearGradient>
+    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#5d451c" stop-opacity="0.24"/>
+      <stop offset="100%" stop-color="#5d451c" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="320" height="240" rx="16" fill="url(#bg)"/>
-  <circle cx="160" cy="120" r="64" fill="none" stroke="url(#gold)" stroke-width="14"/>
-  <g fill="url(#gold)" stroke="#8c5f06" stroke-width="2">
-    <circle cx="160" cy="56" r="10"/>
-    <circle cx="224" cy="120" r="10"/>
-    <circle cx="160" cy="184" r="10"/>
-    <circle cx="96" cy="120" r="10"/>
-    <circle cx="205" cy="75" r="8"/>
-    <circle cx="115" cy="75" r="8"/>
-    <circle cx="205" cy="165" r="8"/>
-    <circle cx="115" cy="165" r="8"/>
+  <rect width="400" height="300" fill="url(#studio)"/>
+  <ellipse cx="200" cy="238" rx="102" ry="16" fill="url(#shadow)"/>
+  <circle cx="200" cy="146" r="78" fill="none" stroke="url(#gold)" stroke-width="15"/>
+  <circle cx="200" cy="146" r="71" fill="none" stroke="#fff3c2" stroke-width="2" opacity="0.65"/>
+  <g fill="url(#gold)" stroke="#885b07" stroke-width="1.6">
+    <circle cx="200" cy="68" r="11"/>
+    <circle cx="278" cy="146" r="11"/>
+    <circle cx="200" cy="224" r="11"/>
+    <circle cx="122" cy="146" r="11"/>
+    <circle cx="255" cy="91" r="8.5"/>
+    <circle cx="145" cy="91" r="8.5"/>
+    <circle cx="255" cy="201" r="8.5"/>
+    <circle cx="145" cy="201" r="8.5"/>
+  </g>
+  <g fill="#fff8db" opacity="0.88">
+    <circle cx="200" cy="68" r="4"/>
+    <circle cx="278" cy="146" r="4"/>
+    <circle cx="200" cy="224" r="4"/>
+    <circle cx="122" cy="146" r="4"/>
   </g>
 </svg>

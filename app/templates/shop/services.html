@@ -2,30 +2,40 @@
 {% block title %}Dịch vụ kim hoàn – {{ store.TenCuaHang }}{% endblock %}
 {% block content %}
 <div class="container section">
-  <div class="card">
-    <h1 style="margin-top:0;">Bảng giá dịch vụ chế tác & chăm sóc trang sức</h1>
-    <p style="color:var(--slate-500);">Quý khách vui lòng mang sản phẩm đến trực tiếp <strong>{{ store.TenCuaHang }}</strong> ({{ store.DiaChi }}) để được kỹ thuật viên kiểm tra, báo chi phí chi tiết và cấp phiếu hẹn nhận trang sức.</p>
+  <div class="card" style="padding:28px;">
+    <div class="section-head" style="margin-bottom:14px;">
+      <div>
+        <h1 style="margin:0;font-size:1.85rem;">Bảng giá dịch vụ chế tác &amp; chăm sóc trang sức</h1>
+        <div class="section-sub">
+          Quý khách vui lòng mang trang sức trực tiếp đến <strong>{{ store.TenCuaHang }}</strong> ({{ store.DiaChi }}) để kỹ thuật viên kiểm tra, tư vấn chi phí và lập phiếu hẹn trả rõ ràng.
+        </div>
+      </div>
+    </div>
 
     <div class="table-wrap">
       <table class="table">
         <thead>
           <tr>
             <th>STT</th>
+            <th>Mã DV</th>
             <th>Tên dịch vụ</th>
             <th class="text-right">Đơn giá cơ bản</th>
             <th class="text-center">Đặt cọc tối thiểu</th>
-            <th>Thông tin áp dụng</th>
+            <th>Quy cách thực hiện</th>
           </tr>
         </thead>
         <tbody>
           {% for s in services %}
             <tr>
               <td>{{ loop.index }}</td>
-              <td><strong>{{ s.TenLoaiDV }}</strong></td>
-              <td class="text-right" style="color:var(--gold-600);font-weight:700;">{{ s.DonGia|vnd }}</td>
-              <td class="text-center"><span class="badge badge-gold">{{ ti_le_tra_truoc|plain }}%</span></td>
-              <td style="font-size:0.86rem;color:var(--slate-500);">Tổng chi phí được tính dựa trên đơn giá cơ bản cộng phụ phí nguyên liệu (nếu phát sinh).</td>
+              <td><span class="badge badge-gold">{{ s.MaDichVu }}</span></td>
+              <td><strong>{{ s.TenDichVu }}</strong></td>
+              <td class="text-right" style="color:var(--gold-600);font-weight:800;">{{ s.DonGiaCoBan|vnd }}</td>
+              <td class="text-center"><span class="badge badge-info">{{ ti_le_tra_truoc }}%</span></td>
+              <td style="font-size:0.85rem;color:var(--slate-500);">Đơn giá thực tế bằng đơn giá cơ bản cộng chi phí riêng (nếu phát sinh nguyên liệu/đá đính kèm).</td>
             </tr>
+          {% else %}
+            <tr><td colspan="6" class="text-center">Hiện chưa có dịch vụ đang hoạt động.</td></tr>
           {% endfor %}
         </tbody>
       </table>

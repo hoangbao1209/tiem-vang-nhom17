@@ -1,12 +1,12 @@
 {% extends "admin/base_admin.html" %}
 {% block content %}
 <div class="page-header no-print">
-  <h1>Chi tiết Phiếu kiểm kê kho #{{ p.SoPhieuKK }}</h1>
+  <h1>Biên bản Kiểm kê kho {{ p.SoPhieuKK }}</h1>
   <div style="display:flex;gap:8px;flex-wrap:wrap;">
-    {% if g.user.VaiTro == 'admin' and p.TrangThaiXacNhan != 'Đã xác nhận' %}
+    {% if g.user.VaiTro == 'QuanLy' and p.TrangThaiXacNhan != 'Đã xác nhận' %}
       <form action="{{ url_for('admin.stocktake_confirm', so_phieu_kk=p.SoPhieuKK) }}" method="post">
         <button type="submit" class="btn btn-success"
-                {{ 'disabled title="Người xác nhận phải khác người thực hiện kiểm kê"' if g.user.MaND == p.MaND_KiemKe else '' }}>
+                {{ 'disabled title="Người xác nhận phải là Quản lý khác với nhân viên thực hiện kiểm kê"' if g.user.MaNV == p.MaNV_KiemKe else '' }}>
           ✓ Xác nhận phiếu kiểm kê
         </button>
       </form>
@@ -18,24 +18,25 @@
 </div>
 
 <div class="card">
-  <div style="text-align:center;border-bottom:2px solid #eadfca;padding-bottom:14px;margin-bottom:16px;">
-    <div style="font-weight:800;font-size:1.1rem;">{{ store.TenCuaHang }}</div>
-    <h2 style="margin:6px 0;">BIÊN BẢN KIỂM KÊ KHO</h2>
+  <div class="voucher-sheet-head">
+    <div class="voucher-sheet-brand">{{ store.TenCuaHang }}</div>
+    <div style="font-size:0.82rem;color:var(--slate-500);">{{ store.DiaChi }} • ĐT: {{ store.SoDienThoai }}</div>
+    <h2 class="voucher-sheet-title">PHIẾU KIỂM KÊ KHO</h2>
     <div>
-      Số phiếu: <strong>#{{ p.SoPhieuKK }}</strong> — Ngày kiểm kê: <strong>{{ p.NgayKiemKe|date }}</strong> —
+      Số phiếu: <strong>{{ p.SoPhieuKK }}</strong> — Ngày kiểm kê: <strong>{{ p.NgayKiemKe|date }}</strong> —
       Trạng thái: <span class="badge {{ 'badge-success' if p.TrangThaiXacNhan == 'Đã xác nhận' else 'badge-warning' }}">{{ p.TrangThaiXacNhan }}</span>
     </div>
   </div>
 
-  <div class="form-grid" style="margin-bottom:16px;">
-    <div><strong>Người thực hiện kiểm kê:</strong> {{ p.NguoiKiemKe or '—' }}</div>
-    <div><strong>Người xác nhận:</strong> {{ p.NguoiXacNhan or 'Chưa xác nhận' }}</div>
-    <div><strong>Ngày xác nhận:</strong> {{ p.NgayXacNhan|date if p.NgayXacNhan else '—' }}</div>
+  <div class="form-grid" style="margin-bottom:16px;font-size:0.92rem;">
+    <div><strong>Người thực hiện kiểm kê:</strong> {{ p.NguoiKiemKe or p.MaNV_KiemKe }}</div>
+    <div><strong>Quản lý xác nhận:</strong> {{ p.NguoiXacNhan or 'Chờ xác nhận' }}</div>
+    <div><strong>Thời điểm xác nhận:</strong> {{ p.NgayXacNhan|date if p.NgayXacNhan else '—' }}</div>
     <div><strong>Ghi chú:</strong> {{ p.GhiChu or '—' }}</div>
   </div>
 
-  <div class="alert alert-info" style="margin-bottom:14px;">
-    Phiếu kiểm kê ghi nhận số liệu đối chiếu tại thời điểm kiểm kê và không tự động làm thay đổi số lượng tồn kho trên hệ thống.
+  <div class="alert alert-info no-print" style="margin-bottom:16px;">
+    <span>Biên bản kiểm kê lưu trữ số liệu đối chiếu tại thời điểm kiểm đếm để phục vụ tra cứu/báo cáo và không làm thay đổi số lượng tồn kho trên hệ thống.</span>
   </div>
 
   <div class="table-wrap">
@@ -57,20 +58,38 @@
         {% for l in lines %}
           <tr>
             <td>{{ loop.index }}</td>
-            <td>{{ l.MaCode or ('SP' ~ l.MaSP) }}</td>
+            <td>{{ l.MaSP }}</td>
             <td><strong>{{ l.TenSP }}</strong></td>
             <td>{{ l.TenLoaiSP }}</td>
             <td>{{ l.TenDVT }}</td>
-            <td class="text-center">{{ l.TonHeThong }}</td>
-            <td class="text-center"><strong>{{ l.TonThucTe }}</strong></td>
-            <td class="text-center" style="font-weight:700;color:{{ 'var(--success)' if l.ChenhLech == 0 else 'var(--danger)' }};">
-              {{ ('+' ~ l.ChenhLech) if l.ChenhLech > 0 else l.ChenhLech }}
+            <td class="text-center">{{ l.TonHeThong|qty }}</td>
+            <td class="text-center"><strong>{{ l.TonThucTe|qty }}</strong></td>
+            <td class="text-center" style="font-weight:700;color:{{ 'var(--emerald)' if l.ChenhLech == 0 else 'var(--ruby)' }};">
+              {{ ('+' ~ (l.ChenhLech|qty)) if l.ChenhLech > 0 else (l.ChenhLech|qty) }}
             </td>
             <td>{{ l.LyDoChenhLech or '—' }}</td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
+  </div>
+
+  <div class="signature-grid">
+    <div class="signature-box">
+      <strong>Người kiểm kê</strong>
+      <span>{{ p.NguoiKiemKe or '' }}</span>
+      <div class="signature-space"></div>
+    </div>
+    <div class="signature-box">
+      <strong>Thủ kho chứng kiến</strong>
+      <span>(Ký, ghi rõ họ tên)</span>
+      <div class="signature-space"></div>
+    </div>
+    <div class="signature-box">
+      <strong>Quản lý xác nhận</strong>
+      <span>{{ p.NguoiXacNhan or '(Chưa xác nhận)' }}</span>
+      <div class="signature-space"></div>
+    </div>
   </div>
 </div>
 {% endblock %}

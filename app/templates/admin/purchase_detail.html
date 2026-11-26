@@ -1,63 +1,84 @@
 {% extends "admin/base_admin.html" %}
 {% block content %}
 <div class="page-header no-print">
-  <h1>Chi tiết Phiếu mua hàng #{{ p.SoPhieu }}</h1>
-  <div style="display:flex;gap:8px;">
-    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ In phiếu</button>
+  <h1>Chi tiết Phiếu mua hàng {{ p.SoPhieuMua }}</h1>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ In phiếu mua</button>
     <a class="btn btn-primary" href="{{ url_for('admin.purchase_create') }}">+ Lập phiếu mới</a>
     <a class="btn btn-outline" href="{{ url_for('admin.purchases') }}">← Danh sách</a>
   </div>
 </div>
 
 <div class="card">
-  <div style="text-align:center;border-bottom:2px solid #eadfca;padding-bottom:14px;margin-bottom:16px;">
-    <div style="font-weight:800;font-size:1.1rem;">{{ store.TenCuaHang }}</div>
-    <h2 style="margin:6px 0;">PHIẾU MUA HÀNG</h2>
-    <div>Số phiếu: <strong>#{{ p.SoPhieu }}</strong> — Ngày lập: <strong>{{ p.NgayLap|date }}</strong></div>
+  <div class="voucher-sheet-head">
+    <div class="voucher-sheet-brand">{{ store.TenCuaHang }}</div>
+    <div style="font-size:0.82rem;color:var(--slate-500);">{{ store.DiaChi }} • ĐT: {{ store.SoDienThoai }}</div>
+    <h2 class="voucher-sheet-title">PHIẾU MUA HÀNG</h2>
+    <div>Số phiếu: <strong>{{ p.SoPhieuMua }}</strong> — Ngày lập: <strong>{{ p.NgayLap|date }}</strong></div>
   </div>
 
-  <div class="form-grid" style="margin-bottom:16px;">
-    <div><strong>Mã nhà cung cấp:</strong> NCC{{ '%03d'|format(p.MaNCC) }}</div>
-    <div><strong>Tên nhà cung cấp:</strong> {{ p.TenNCC }}</div>
-    <div><strong>Điện thoại:</strong> {{ p.SoDienThoai or '—' }}</div>
+  <div class="form-grid" style="margin-bottom:18px;font-size:0.92rem;">
+    <div><strong>Mã nhà cung cấp:</strong> {{ p.MaNCC }}</div>
+    <div><strong>Nhà cung cấp:</strong> {{ p.TenNCC }}</div>
+    <div><strong>Số điện thoại:</strong> {{ p.SoDienThoai or '—' }}</div>
     <div><strong>Địa chỉ:</strong> {{ p.DiaChi or '—' }}</div>
-    <div><strong>Nhân viên lập phiếu:</strong> {{ p.NguoiLap or '—' }}</div>
+    <div><strong>Nhân viên lập phiếu:</strong> {{ p.NguoiLap or p.MaNV_Lap }}</div>
     <div><strong>Ghi chú:</strong> {{ p.GhiChu or '—' }}</div>
   </div>
 
-  <table class="table">
-    <thead>
-      <tr>
-        <th>STT</th>
-        <th>Mã SP</th>
-        <th>Tên sản phẩm</th>
-        <th>Loại sản phẩm</th>
-        <th>Đơn vị tính</th>
-        <th class="text-center">Số lượng</th>
-        <th class="text-right">Đơn giá mua</th>
-        <th class="text-right">Thành tiền</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for l in lines %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
         <tr>
-          <td>{{ loop.index }}</td>
-          <td>{{ l.MaCode or ('SP' ~ l.MaSP) }}</td>
-          <td><strong>{{ l.TenSP }}</strong></td>
-          <td>{{ l.TenLoaiSP }}</td>
-          <td>{{ l.TenDVT }}</td>
-          <td class="text-center">{{ l.SoLuong }}</td>
-          <td class="text-right">{{ l.DonGia|vnd }}</td>
-          <td class="text-right" style="font-weight:700;">{{ l.ThanhTien|vnd }}</td>
+          <th>STT</th>
+          <th>Mã SP</th>
+          <th>Tên sản phẩm</th>
+          <th>Loại sản phẩm</th>
+          <th>ĐVT</th>
+          <th class="text-center">Số lượng</th>
+          <th class="text-right">Đơn giá mua</th>
+          <th class="text-right">Thành tiền</th>
         </tr>
-      {% endfor %}
-    </tbody>
-    <tfoot>
-      <tr>
-        <th colspan="7" class="text-right">Tổng tiền phiếu mua:</th>
-        <th class="text-right" style="font-size:1.2rem;color:var(--gold-600);">{{ p.TongTien|vnd }}</th>
-      </tr>
-    </tfoot>
-  </table>
+      </thead>
+      <tbody>
+        {% for l in lines %}
+          <tr>
+            <td>{{ l.SoDong }}</td>
+            <td>{{ l.MaSP }}</td>
+            <td><strong>{{ l.TenSP }}</strong></td>
+            <td>{{ l.TenLoaiSP }}</td>
+            <td>{{ l.TenDVT }}</td>
+            <td class="text-center">{{ l.SoLuong|qty }}</td>
+            <td class="text-right">{{ l.DonGiaMua|vnd }}</td>
+            <td class="text-right" style="font-weight:700;">{{ l.ThanhTien|vnd }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="7" class="text-right">Tổng tiền phiếu mua:</th>
+          <th class="text-right" style="font-size:1.22rem;color:var(--gold-600);">{{ p.TongTien|vnd }}</th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="signature-grid">
+    <div class="signature-box">
+      <strong>Đại diện nhà cung cấp</strong>
+      <span>(Ký, ghi rõ họ tên)</span>
+      <div class="signature-space"></div>
+    </div>
+    <div class="signature-box">
+      <strong>Nhân viên lập phiếu</strong>
+      <span>{{ p.NguoiLap or '' }}</span>
+      <div class="signature-space"></div>
+    </div>
+    <div class="signature-box">
+      <strong>Quản lý cửa hàng</strong>
+      <span>(Ký xác nhận)</span>
+      <div class="signature-space"></div>
+    </div>
+  </div>
 </div>
 {% endblock %}

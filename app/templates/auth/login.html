@@ -1,25 +1,31 @@
 {% extends "base.html" %}
-{% block title %}Đăng nhập quản lý – {{ store.TenCuaHang }}{% endblock %}
+{% block title %}Đăng nhập nội bộ – {{ store.TenCuaHang }}{% endblock %}
 {% block content %}
 <div class="container section">
-  <div class="card" style="max-width:440px;margin:28px auto;padding:28px;">
-    <h2 style="margin-top:0;">Đăng nhập quản lý</h2>
-    <p style="color:var(--slate-500);font-size:0.9rem;">Dành cho quản trị viên và nhân viên cửa hàng.</p>
+  <div class="card" style="max-width:460px;margin:28px auto;padding:32px;">
+    <div style="text-align:center;margin-bottom:22px;">
+      <div class="brand-mark" style="margin:0 auto 12px;width:52px;height:52px;font-size:1.3rem;">KN</div>
+      <h1 style="margin:0;font-size:1.65rem;">Đăng nhập hệ thống quản lý</h1>
+      <p style="color:var(--slate-500);font-size:0.88rem;margin:6px 0 0;">Dành cho Quản lý cửa hàng và Nhân viên bán hàng / kho.</p>
+    </div>
+
     <form method="post">
       <div class="form-group">
-        <label>Tên đăng nhập</label>
-        <input type="text" name="TenDangNhap" required autofocus placeholder="admin hoặc nhanvien">
+        <label>Tên đăng nhập <span class="req">*</span></label>
+        <input type="text" name="TenDangNhap" required autofocus placeholder="Nhập tên tài khoản...">
       </div>
       <div class="form-group">
-        <label>Mật khẩu</label>
+        <label>Mật khẩu <span class="req">*</span></label>
         <input type="password" name="MatKhau" required placeholder="••••••••">
       </div>
-      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:8px;">Đăng nhập</button>
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:8px;padding:12px;">Đăng nhập</button>
     </form>
-    <div style="margin-top:18px;padding:12px;border-radius:8px;background:var(--gold-50);font-size:0.84rem;">
-      <strong>Tài khoản demo có sẵn:</strong><br>
-      • Quản trị viên: <code>admin</code> / <code>admin123</code><br>
-      • Nhân viên: <code>nhanvien</code> / <code>nhanvien123</code>
+
+    <div style="margin-top:22px;padding:14px 16px;border-radius:10px;background:var(--gold-50);border:1px solid var(--border);font-size:0.83rem;">
+      <div style="font-weight:700;color:var(--gold-700);margin-bottom:6px;">Tài khoản trải nghiệm có sẵn:</div>
+      <div>• <strong>Quản lý</strong> (toàn quyền): <code>admin</code> / <code>admin123</code></div>
+      <div>• <strong>Nhân viên bán hàng</strong>: <code>nhanvien</code> / <code>nhanvien123</code></div>
+      <div>• <strong>Nhân viên kho</strong> (có quyền chuyển ngược DV): <code>kho</code> / <code>kho123</code></div>
     </div>
   </div>
 </div>

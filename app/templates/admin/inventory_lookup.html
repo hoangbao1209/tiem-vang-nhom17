@@ -1,0 +1,104 @@
+{% extends "admin/base_admin.html" %}
+{% block content %}
+<div class="page-header no-print">
+  <div>
+    <h1>Tra cứu Sản phẩm tồn kho</h1>
+    <div class="page-subtitle">Hiển thị số lượng sản phẩm hiện có trong kho tại thời điểm tra cứu, đơn giá mua, % lợi nhuận và đơn giá bán hiện hành.</div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ In danh sách</button>
+    <a class="btn btn-dark" href="{{ url_for('admin.stocktake_create') }}">📋 Lập phiếu kiểm kê</a>
+    <a class="btn btn-primary" href="{{ url_for('admin.purchase_create') }}">+ Nhập thêm hàng</a>
+  </div>
+</div>
+
+<div class="card">
+  <form method="get" class="filter-bar no-print">
+    <div class="form-group" style="flex:1;min-width:210px;">
+      <label>Mã SP / Tên sản phẩm / Chất liệu</label>
+      <input type="text" name="q" value="{{ q }}" placeholder="VD: SP001, SJC, Nhẫn 18K...">
+    </div>
+    <div class="form-group">
+      <label>Loại sản phẩm</label>
+      <select name="loai">
+        <option value="">Tất cả loại</option>
+        {% for c in categories %}
+          <option value="{{ c.MaLoaiSP }}" {{ 'selected' if loai == c.MaLoaiSP else '' }}>{{ c.TenLoaiSP }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Mức tồn kho</label>
+      <select name="muc_ton">
+        <option value="">Tất cả</option>
+        <option value="con" {{ 'selected' if muc_ton == 'con' else '' }}>Còn hàng (&gt; 0)</option>
+        <option value="sap_het" {{ 'selected' if muc_ton == 'sap_het' else '' }}>Sắp hết (≤ {{ min_ton }})</option>
+        <option value="het" {{ 'selected' if muc_ton == 'het' else '' }}>Đã hết hàng (= 0)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Tình trạng kinh doanh</label>
+      <select name="tinh_trang">
+        <option value="">Tất cả</option>
+        <option value="Đang kinh doanh" {{ 'selected' if tinh_trang == 'Đang kinh doanh' else '' }}>Đang kinh doanh</option>
+        <option value="Ngừng kinh doanh" {{ 'selected' if tinh_trang == 'Ngừng kinh doanh' else '' }}>Ngừng kinh doanh</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-dark">Tra cứu</button>
+    <a class="btn btn-outline" href="{{ url_for('admin.inventory_lookup') }}">Đặt lại</a>
+  </form>
+
+  <div class="voucher-sheet-head" style="margin-bottom:14px;">
+    <div class="voucher-sheet-brand">{{ store.TenCuaHang }}</div>
+    <h2 class="voucher-sheet-title" style="font-size:1.3rem;">DANH SÁCH SẢN PHẨM TỒN KHO</h2>
+    <div style="font-size:0.85rem;color:var(--slate-500);">
+      Thời điểm tra cứu: <strong>{{ today|date }}</strong> — Tổng số mặt hàng: <strong>{{ rows|length }}</strong> — Tổng giá trị vốn tồn: <strong style="color:var(--gold-700);">{{ tong_gia_tri_von|vnd }}</strong>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>STT</th>
+          <th>Mã SP</th>
+          <th>Tên sản phẩm</th>
+          <th>Loại sản phẩm</th>
+          <th>ĐVT</th>
+          <th class="text-right">Đơn giá mua</th>
+          <th class="text-center">% Lợi nhuận</th>
+          <th class="text-right">Đơn giá bán</th>
+          <th class="text-center">Số lượng tồn</th>
+          <th class="text-center">Tình trạng</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td><strong>{{ r.MaSP }}</strong></td>
+            <td><strong>{{ r.TenSP }}</strong></td>
+            <td>{{ r.TenLoaiSP }}</td>
+            <td>{{ r.TenDVT }}</td>
+            <td class="text-right">{{ r.DonGiaMua|vnd }}</td>
+            <td class="text-center"><span class="badge badge-gold">{{ r.PhanTramLoiNhuan|pct }}</span></td>
+            <td class="text-right" style="font-weight:700;color:var(--gold-600);">{{ r.DonGiaBan|vnd }}</td>
+            <td class="text-center">
+              <span class="badge {{ 'badge-danger' if r.SoLuongTon <= 0 else ('badge-warning' if r.SoLuongTon <= min_ton else 'badge-success') }}">
+                {{ r.SoLuongTon|qty }}
+              </span>
+            </td>
+            <td class="text-center">
+              <span class="badge {{ 'badge-success' if r.TinhTrang == 'Đang kinh doanh' else 'badge-danger' }}">
+                {{ r.TinhTrang }}
+              </span>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="10" class="text-center">Không tìm thấy sản phẩm phù hợp với tiêu chí tra cứu.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

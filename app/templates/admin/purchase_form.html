@@ -1,28 +1,35 @@
 {% extends "admin/base_admin.html" %}
 {% block content %}
 <div class="page-header">
-  <h1>Lập Phiếu mua hàng</h1>
+  <div>
+    <h1>Lập Phiếu mua hàng</h1>
+    <div class="page-subtitle">Ghi nhận hàng nhập từ nhà cung cấp đang hợp tác; tồn kho và đơn giá mua gần nhất tự động cập nhật sau khi lưu.</div>
+  </div>
   <a class="btn btn-outline" href="{{ url_for('admin.purchases') }}">← Danh sách phiếu mua</a>
 </div>
 
 <form method="post" class="card">
   <div class="form-grid">
     <div class="form-group">
-      <label>Nhà cung cấp *</label>
-      <select name="MaNCC" required>
+      <label>Tìm nhanh nhà cung cấp</label>
+      <input type="text" id="supplier-quick-search" placeholder="Gõ mã NCC, tên hoặc SĐT để lọc...">
+    </div>
+    <div class="form-group">
+      <label>Nhà cung cấp <span class="req">*</span></label>
+      <select name="MaNCC" id="purchase-supplier-select" required>
         <option value="">-- Chọn nhà cung cấp đang hợp tác --</option>
         {% for s in suppliers %}
-          <option value="{{ s.MaNCC }}">NCC{{ '%03d'|format(s.MaNCC) }} – {{ s.TenNCC }} ({{ s.SoDienThoai or s.DiaChi }})</option>
+          <option value="{{ s.MaNCC }}">{{ s.MaNCC }} – {{ s.TenNCC }} ({{ s.SoDienThoai or s.DiaChi or '—' }})</option>
         {% endfor %}
       </select>
     </div>
     <div class="form-group">
-      <label>Ngày lập phiếu *</label>
+      <label>Ngày lập phiếu <span class="req">*</span></label>
       <input type="date" name="NgayLap" value="{{ today }}" max="{{ today }}" required>
     </div>
     <div class="form-group">
-      <label>Ghi chú</label>
-      <input type="text" name="GhiChu" placeholder="Ghi chú lô hàng...">
+      <label>Ghi chú lô hàng</label>
+      <input type="text" name="GhiChu" placeholder="Số hóa đơn NCC, ghi chú kiểm nhận...">
     </div>
   </div>
 
@@ -35,11 +42,11 @@
     <table class="table">
       <thead>
         <tr>
-          <th style="min-width:250px;">Sản phẩm</th>
+          <th style="min-width:260px;">Sản phẩm <span class="req">*</span></th>
           <th>Loại sản phẩm</th>
           <th>ĐVT</th>
-          <th style="width:120px;">Số lượng</th>
-          <th style="width:170px;">Đơn giá mua (₫)</th>
+          <th style="width:120px;">Số lượng <span class="req">*</span></th>
+          <th style="width:170px;">Đơn giá mua (₫) <span class="req">*</span></th>
           <th class="text-right">Thành tiền</th>
           <th></th>
         </tr>
@@ -48,17 +55,17 @@
         <tr>
           <td>
             <select name="MaSP" required>
-              <option value="">-- Chọn sản phẩm --</option>
+              <option value="">-- Chọn sản phẩm đang kinh doanh --</option>
               {% for p in products %}
                 <option value="{{ p.MaSP }}" data-loai="{{ p.TenLoaiSP }}" data-dvt="{{ p.TenDVT }}" data-giamua="{{ p.DonGiaMua|plain }}">
-                  {{ p.MaCode or ('SP' ~ p.MaSP) }} – {{ p.TenSP }} (Tồn: {{ p.SoLuongTon }})
+                  {{ p.MaSP }} – {{ p.TenSP }} (Tồn: {{ p.SoLuongTon|qty }})
                 </option>
               {% endfor %}
             </select>
           </td>
           <td class="cell-loai">—</td>
           <td class="cell-dvt">—</td>
-          <td><input type="number" name="SoLuong" value="1" min="1" required></td>
+          <td><input type="number" name="SoLuong" value="1" min="0.001" step="any" required></td>
           <td><input type="number" name="DonGia" value="0" min="0" step="1" required></td>
           <td class="text-right cell-thanhtien" style="font-weight:700;">0 ₫</td>
           <td><button type="button" class="btn btn-danger btn-sm" onclick="removeVoucherRow(this)">✕</button></td>
@@ -67,15 +74,16 @@
       <tfoot>
         <tr>
           <th colspan="5" class="text-right">Tổng tiền phiếu mua:</th>
-          <th class="text-right" id="voucher-total" style="font-size:1.15rem;color:var(--gold-600);">0 ₫</th>
+          <th class="text-right" id="voucher-total" style="font-size:1.2rem;color:var(--gold-600);">0 ₫</th>
           <th></th>
         </tr>
       </tfoot>
     </table>
   </div>
 
-  <div style="margin-top:18px;display:flex;justify-content:flex-end;gap:10px;">
-    <button type="submit" class="btn btn-primary">Lưu phiếu mua hàng</button>
+  <div style="margin-top:20px;display:flex;justify-content:flex-end;gap:10px;">
+    <a class="btn btn-outline" href="{{ url_for('admin.purchases') }}">Hủy bỏ</a>
+    <button type="submit" class="btn btn-primary">Xác nhận &amp; Lưu phiếu mua hàng</button>
   </div>
 </form>
 
@@ -83,17 +91,17 @@
   <tr>
     <td>
       <select name="MaSP" required>
-        <option value="">-- Chọn sản phẩm --</option>
+        <option value="">-- Chọn sản phẩm đang kinh doanh --</option>
         {% for p in products %}
           <option value="{{ p.MaSP }}" data-loai="{{ p.TenLoaiSP }}" data-dvt="{{ p.TenDVT }}" data-giamua="{{ p.DonGiaMua|plain }}">
-            {{ p.MaCode or ('SP' ~ p.MaSP) }} – {{ p.TenSP }} (Tồn: {{ p.SoLuongTon }})
+            {{ p.MaSP }} – {{ p.TenSP }} (Tồn: {{ p.SoLuongTon|qty }})
           </option>
         {% endfor %}
       </select>
     </td>
     <td class="cell-loai">—</td>
     <td class="cell-dvt">—</td>
-    <td><input type="number" name="SoLuong" value="1" min="1" required></td>
+    <td><input type="number" name="SoLuong" value="1" min="0.001" step="any" required></td>
     <td><input type="number" name="DonGia" value="0" min="0" step="1" required></td>
     <td class="text-right cell-thanhtien" style="font-weight:700;">0 ₫</td>
     <td><button type="button" class="btn btn-danger btn-sm" onclick="removeVoucherRow(this)">✕</button></td>

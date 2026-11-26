@@ -1,46 +1,49 @@
 {% extends "admin/base_admin.html" %}
 {% block content %}
 <div class="page-header">
-  <h1>{{ 'Cập nhật sản phẩm ' ~ (sp.MaCode or ('#' ~ sp.MaSP)) if sp else 'Thêm sản phẩm mới' }}</h1>
+  <div>
+    <h1>{{ 'Cập nhật sản phẩm ' ~ sp.MaSP if sp else 'Thêm sản phẩm mới' }}</h1>
+    <div class="page-subtitle">Mã sản phẩm là duy nhất. Trạng thái mặc định khi thêm mới là Đang kinh doanh.</div>
+  </div>
   <a class="btn btn-outline" href="{{ url_for('admin.products_admin') }}">← Danh sách sản phẩm</a>
 </div>
 
-<form method="post" enctype="multipart/form-data" class="card" style="max-width:820px;">
+<form method="post" enctype="multipart/form-data" class="card" style="max-width:860px;">
   <div class="form-grid">
     <div class="form-group">
-      <label>Mã sản phẩm (tự sinh nếu để trống)</label>
-      <input type="text" name="MaCode" value="{{ sp.MaCode if sp and sp.MaCode else '' }}" placeholder="Ví dụ: SP020">
+      <label>Mã sản phẩm {{ '(không thể đổi)' if sp else '(tự sinh nếu để trống)' }}</label>
+      <input type="text" name="MaSP" value="{{ sp.MaSP if sp else '' }}" {{ 'readonly' if sp else '' }} placeholder="VD: SP020">
     </div>
     <div class="form-group">
-      <label>Tên sản phẩm *</label>
-      <input type="text" name="TenSP" value="{{ sp.TenSP if sp else '' }}" required placeholder="Ví dụ: Nhẫn vàng 18K đính đá...">
+      <label>Tên sản phẩm <span class="req">*</span></label>
+      <input type="text" name="TenSP" value="{{ sp.TenSP if sp else '' }}" required placeholder="VD: Nhẫn vàng 18K đính đá CZ...">
     </div>
     <div class="form-group">
-      <label>Loại sản phẩm *</label>
+      <label>Loại sản phẩm <span class="req">*</span></label>
       <select name="MaLoaiSP" required>
         <option value="">-- Chọn loại sản phẩm --</option>
         {% for c in categories %}
           <option value="{{ c.MaLoaiSP }}" {{ 'selected' if sp and sp.MaLoaiSP == c.MaLoaiSP else '' }}>
-            {{ c.TenLoaiSP }} (ĐVT: {{ c.TenDVT }} — Lợi nhuận: {{ c.PhanTramLoiNhuan|plain }}%)
+            {{ c.TenLoaiSP }} (ĐVT: {{ c.TenDVT }} — Lợi nhuận: {{ c.PhanTramLoiNhuan|pct }})
           </option>
         {% endfor %}
       </select>
     </div>
     <div class="form-group">
-      <label>Đơn giá mua gần nhất (₫)</label>
-      <input type="number" name="DonGiaMua" value="{{ sp.DonGiaMua|plain if sp else 0 }}" min="0" step="1">
+      <label>Đơn giá mua hiện hành (₫) <span class="req">*</span></label>
+      <input type="number" name="DonGiaMua" value="{{ sp.DonGiaMua|plain if sp else 0 }}" min="0" step="1" required>
     </div>
     <div class="form-group">
       <label>Chất liệu</label>
-      <input type="text" name="ChatLieu" value="{{ sp.ChatLieu if sp and sp.ChatLieu else '' }}" placeholder="Vàng 18K, Vàng 999.9, Bạc Ý 925...">
+      <input type="text" name="ChatLieu" value="{{ sp.ChatLieu if sp and sp.ChatLieu else '' }}" placeholder="Vàng 999.9, Vàng 18K, Bạc Ý 925...">
     </div>
     <div class="form-group">
       <label>Hàm lượng / Tuổi vàng</label>
-      <input type="text" name="TuoiVang" value="{{ sp.TuoiVang if sp and sp.TuoiVang else '' }}" placeholder="750 (18K), 999.9 (24K), S925...">
+      <input type="text" name="TuoiVang" value="{{ sp.TuoiVang if sp and sp.TuoiVang else '' }}" placeholder="24K (99.99%), 18K (75%), S925...">
     </div>
     <div class="form-group">
       <label>Trọng lượng tham khảo</label>
-      <input type="text" name="TrongLuong" value="{{ sp.TrongLuong if sp and sp.TrongLuong else '' }}" placeholder="1 chỉ (3.75g), 2.8g...">
+      <input type="text" name="TrongLuong" value="{{ sp.TrongLuong if sp and sp.TrongLuong else '' }}" placeholder="1 chỉ (3.75g), 0.62 carat...">
     </div>
     <div class="form-group">
       <label>Tình trạng kinh doanh</label>
@@ -58,28 +61,31 @@
       </select>
     </div>
     <div class="form-group">
-      <label>Tải ảnh sản phẩm từ máy (png, jpg, webp)</label>
+      <label>Hoặc tải ảnh từ máy (png, jpg, webp)</label>
       <input type="file" name="HinhAnhFile" accept=".png,.jpg,.jpeg,.gif,.webp">
     </div>
   </div>
 
   <div class="form-group">
-    <label>Chính sách bảo hành &amp; Thu đổi</label>
+    <label>Chính sách bảo hành &amp; thu đổi</label>
     <input type="text" name="BaoHanh" value="{{ sp.BaoHanh if sp and sp.BaoHanh else '' }}" placeholder="Làm sạch siêu âm &amp; đánh bóng miễn phí trọn đời">
   </div>
 
   <div class="form-group">
     <label>Mô tả chi tiết sản phẩm</label>
-    <textarea name="MoTa" rows="3" placeholder="Mô tả kiểu dáng, viên đá, giấy kiểm định, gợi ý sử dụng...">{{ sp.MoTa if sp and sp.MoTa else '' }}</textarea>
+    <textarea name="MoTa" rows="3" placeholder="Kiểu dáng, giấy kiểm định, gợi ý đeo và bảo quản...">{{ sp.MoTa if sp and sp.MoTa else '' }}</textarea>
   </div>
 
   <div class="form-group">
     <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
       <input type="checkbox" name="HienThi" value="1" {{ 'checked' if not sp or sp.HienThi else '' }} style="width:auto;">
-      Hiển thị sản phẩm trên trang bán hàng cho khách (chỉ áp dụng khi Đang kinh doanh)
+      Hiển thị sản phẩm trên trang bán hàng cho khách (áp dụng khi Đang kinh doanh)
     </label>
   </div>
 
-  <button type="submit" class="btn btn-primary">Lưu sản phẩm</button>
+  <div style="display:flex;gap:10px;margin-top:8px;">
+    <button type="submit" class="btn btn-primary">Lưu thông tin sản phẩm</button>
+    <a class="btn btn-outline" href="{{ url_for('admin.products_admin') }}">Quay lại</a>
+  </div>
 </form>
 {% endblock %}

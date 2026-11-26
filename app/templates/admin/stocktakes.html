@@ -3,7 +3,7 @@
 <div class="page-header">
   <div>
     <h1>Danh sách Phiếu kiểm kê kho</h1>
-    <div style="color:var(--slate-500);font-size:0.9rem;">Đối chiếu tồn kho thực tế và tồn kho trên hệ thống theo định kỳ hoặc đột xuất.</div>
+    <div class="page-subtitle">Lưu trữ các biên bản đối chiếu tồn kho thực tế và tồn hệ thống. Việc lập hoặc xác nhận kiểm kê không tự động làm thay đổi số lượng tồn kho.</div>
   </div>
   <a class="btn btn-primary" href="{{ url_for('admin.stocktake_create') }}">+ Lập phiếu kiểm kê</a>
 </div>
@@ -14,13 +14,13 @@
       <thead>
         <tr>
           <th>STT</th>
-          <th>Số phiếu KK</th>
+          <th>Số phiếu kiểm kê</th>
           <th>Ngày kiểm kê</th>
-          <th>Người kiểm kê</th>
+          <th>Người thực hiện</th>
           <th class="text-center">Số SP kiểm kê</th>
-          <th class="text-center">Số dòng chênh lệch</th>
+          <th class="text-center">Kết quả đối chiếu</th>
           <th>Trạng thái xác nhận</th>
-          <th>Người xác nhận</th>
+          <th>Quản lý xác nhận</th>
           <th class="text-right">Chi tiết</th>
         </tr>
       </thead>
@@ -28,13 +28,13 @@
         {% for r in rows %}
           <tr>
             <td>{{ loop.index }}</td>
-            <td><strong>#{{ r.SoPhieuKK }}</strong></td>
+            <td><strong>{{ r.SoPhieuKK }}</strong></td>
             <td>{{ r.NgayKiemKe|date }}</td>
-            <td>{{ r.NguoiKiemKe or '—' }}</td>
+            <td>{{ r.NguoiKiemKe or r.MaNV_KiemKe }}</td>
             <td class="text-center">{{ r.SoSP }}</td>
             <td class="text-center">
               {% if r.SoChenhLech > 0 %}
-                <span class="badge badge-danger">{{ r.SoChenhLech }} dòng lệch</span>
+                <span class="badge badge-danger">{{ r.SoChenhLech }} dòng chênh lệch</span>
               {% else %}
                 <span class="badge badge-success">Khớp 100%</span>
               {% endif %}
@@ -47,15 +47,15 @@
             <td>
               {{ r.NguoiXacNhan or '—' }}
               {% if r.NgayXacNhan %}
-                <div style="font-size:0.78rem;color:var(--slate-500);">{{ r.NgayXacNhan|date }}</div>
+                <div style="font-size:0.76rem;color:var(--slate-500);">{{ r.NgayXacNhan|date }}</div>
               {% endif %}
             </td>
             <td class="text-right">
-              <a class="btn btn-outline btn-sm" href="{{ url_for('admin.stocktake_detail', so_phieu_kk=r.SoPhieuKK) }}">Xem phiếu</a>
+              <a class="btn btn-outline btn-sm" href="{{ url_for('admin.stocktake_detail', so_phieu_kk=r.SoPhieuKK) }}">Xem biên bản</a>
             </td>
           </tr>
         {% else %}
-          <tr><td colspan="9" class="text-center">Chưa có phiếu kiểm kê nào.</td></tr>
+          <tr><td colspan="9" class="text-center">Chưa có phiếu kiểm kê kho nào.</td></tr>
         {% endfor %}
       </tbody>
     </table>

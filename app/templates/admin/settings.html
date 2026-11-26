@@ -2,91 +2,168 @@
 {% block content %}
 <div class="page-header">
   <div>
-    <h1>Quy định hệ thống &amp; Quản lý tài khoản</h1>
-    <div style="color:var(--slate-500);font-size:0.9rem;">Cấu hình thông tin cửa hàng, ngưỡng tồn kho, tỷ lệ trả trước dịch vụ, phân quyền nhân viên và nhật ký thay đổi quy định.</div>
+    <h1>Quy định hệ thống, Tài khoản &amp; Sao lưu CSDL</h1>
+    <div class="page-subtitle">Dành riêng cho Quản lý: điều chỉnh tham số trả trước tối thiểu, phân quyền tài khoản nhân viên, truy vết nhật ký và sao lưu / phục hồi dữ liệu.</div>
   </div>
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1.35fr;gap:20px;">
-  <div class="card">
-    <h3 class="card-title">Thông tin cửa hàng &amp; Tham số quy định</h3>
-    <form method="post">
-      <input type="hidden" name="action" value="save_params">
-      {% for key, label in param_labels %}
+<div class="split-grid">
+  <div style="min-width:0;">
+    <div class="card">
+      <h3 class="card-title">⚙️ Tham số quy định dịch vụ</h3>
+      <form method="post">
+        <input type="hidden" name="action" value="save_thamso">
         <div class="form-group">
-          <label>{{ label }}</label>
-          {% if key == 'TiLeTraTruocToiThieu' %}
-            <input type="number" name="{{ key }}" value="{{ params.get(key, '') }}" min="0" max="100" step="1" required>
-          {% elif key == 'SoLuongTonToiThieu' %}
-            <input type="number" name="{{ key }}" value="{{ params.get(key, '') }}" min="0" step="1" required>
-          {% else %}
-            <input type="text" name="{{ key }}" value="{{ params.get(key, '') }}">
-          {% endif %}
+          <label>Tỷ lệ trả trước tối thiểu khi lập phiếu dịch vụ (%) <span class="req">*</span></label>
+          <input type="number" name="TiLeTraTruoc" value="{{ ti_le_pct }}" min="0" max="100" step="1" required>
+          <small style="color:var(--slate-500);font-size:0.79rem;">Chỉ áp dụng cho phiếu dịch vụ lập sau thời điểm lưu; các phiếu đã lập giữ nguyên tỷ lệ cũ.</small>
         </div>
-      {% endfor %}
-      <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
-    </form>
+        <div class="form-group">
+          <label>Lý do / Ghi chú điều chỉnh</label>
+          <input type="text" name="GhiChu" placeholder="VD: Điều chỉnh chính sách đặt cọc mùa cao điểm...">
+        </div>
+        <button type="submit" class="btn btn-primary">Lưu quy định mới</button>
+      </form>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:0.84rem;color:var(--slate-500);">
+        Các quy định cấu hình khác:
+        <a href="{{ url_for('admin.categories_admin') }}" style="color:var(--gold-600);font-weight:600;text-decoration:underline;">Loại SP, ĐVT &amp; % lợi nhuận</a> •
+        <a href="{{ url_for('admin.service_types_admin') }}" style="color:var(--gold-600);font-weight:600;text-decoration:underline;">Danh sách &amp; Đơn giá dịch vụ</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>💾 Sao lưu &amp; Phục hồi Cơ sở dữ liệu</span>
+        <form action="{{ url_for('admin.backup_create') }}" method="post" style="display:inline;">
+          <button type="submit" class="btn btn-primary btn-sm">+ Tạo bản sao lưu ngay</button>
+        </form>
+      </div>
+      <p style="font-size:0.84rem;color:var(--slate-500);margin-top:0;">
+        Tạo bản sao nóng an toàn cho toàn bộ 21 bảng dữ liệu và cho phép phục hồi khi có sự cố (hệ thống tự sao lưu dự phòng trước khi phục hồi).
+      </p>
+
+      <form action="{{ url_for('admin.backup_restore') }}" method="post" enctype="multipart/form-data"
+            style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap;"
+            onsubmit="return confirm('Phục hồi cơ sở dữ liệu từ tệp vừa chọn? Dữ liệu hiện tại sẽ được sao lưu dự phòng trước khi ghi đè.');">
+        <input type="file" name="BackupFile" accept=".db" required style="flex:1;min-width:180px;">
+        <button type="submit" class="btn btn-outline btn-sm">Phục hồi từ máy</button>
+      </form>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Tệp sao lưu</th>
+              <th>Thời gian</th>
+              <th class="text-right">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in backups[:6] %}
+              <tr>
+                <td>
+                  <strong style="font-size:0.82rem;">{{ b.filename }}</strong>
+                  <div style="font-size:0.74rem;color:var(--slate-500);">{{ b.size_kb }} KB</div>
+                </td>
+                <td style="font-size:0.8rem;">{{ b.modified }}</td>
+                <td class="text-right" style="white-space:nowrap;">
+                  <a class="btn btn-outline btn-sm" href="{{ url_for('admin.backup_download', filename=b.filename) }}">Tải về</a>
+                  <form action="{{ url_for('admin.backup_restore') }}" method="post" style="display:inline;"
+                        onsubmit="return confirm('Phục hồi CSDL về thời điểm {{ b.modified }}?');">
+                    <input type="hidden" name="BackupFilename" value="{{ b.filename }}">
+                    <button type="submit" class="btn btn-danger btn-sm">Phục hồi</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr><td colspan="3" class="text-center">Chưa có bản sao lưu nào trên máy chủ.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <div class="card">
-    <h3 class="card-title">Tài khoản nhân viên &amp; quản trị</h3>
-    <form method="post" style="display:grid;grid-template-columns:1fr 1fr 1.1fr 0.9fr auto;gap:8px;margin-bottom:8px;">
+    <h3 class="card-title">👥 Quản lý Tài khoản &amp; Phân quyền</h3>
+    <form method="post" class="inline-add-grid">
       <input type="hidden" name="action" value="add_user">
-      <input type="text" name="TenDangNhap" required placeholder="Tên đăng nhập">
-      <input type="password" name="MatKhau" required placeholder="Mật khẩu">
-      <input type="text" name="HoTen" required placeholder="Họ tên">
+      <input type="text" name="TenDangNhap" required placeholder="Tên đăng nhập *">
+      <input type="password" name="MatKhau" required minlength="6" placeholder="Mật khẩu (≥6) *">
+      <input type="text" name="TenNV" required placeholder="Họ tên nhân viên *">
       <select name="VaiTro">
-        <option value="nhanvien">Nhân viên</option>
-        <option value="admin">Quản trị</option>
+        <option value="NhanVien">Nhân viên</option>
+        <option value="QuanLy">Quản lý</option>
       </select>
-      <button type="submit" class="btn btn-primary">+ Tạo</button>
-      <label style="grid-column:1 / -1;display:flex;align-items:center;gap:6px;font-size:0.84rem;color:var(--slate-700);">
+      <button type="submit" class="btn btn-primary">+ Tạo tài khoản</button>
+      <label style="grid-column:1 / -1;display:flex;align-items:center;gap:6px;font-size:0.83rem;color:var(--slate-700);cursor:pointer;">
         <input type="checkbox" name="CoQuyenChuyenNguoc" value="1" style="width:auto;">
-        Cấp quyền chuyển ngược trạng thái dịch vụ (từ Đã giao về Chưa giao)
+        Cấp quyền chuyển ngược tình trạng dịch vụ (Đã giao → Chưa giao)
       </label>
     </form>
 
-    <div class="table-wrap" style="margin-top:12px;">
+    <div class="table-wrap">
       <table class="table">
         <thead>
           <tr>
-            <th>Tên đăng nhập</th>
-            <th>Họ tên</th>
+            <th>Mã NV</th>
+            <th>Tài khoản &amp; Họ tên</th>
             <th>Vai trò</th>
-            <th class="text-center">Quyền chuyển ngược DV</th>
+            <th class="text-center">Chuyển ngược DV</th>
+            <th class="text-center">Trạng thái</th>
             <th class="text-right">Thao tác</th>
           </tr>
         </thead>
         <tbody>
           {% for u in users %}
             <tr>
-              <td><strong>{{ u.TenDangNhap }}</strong></td>
-              <td>{{ u.HoTen }}</td>
+              <td><strong>{{ u.MaNV }}</strong></td>
               <td>
-                <span class="badge {{ 'badge-gold' if u.VaiTro == 'admin' else 'badge-info' }}">
-                  {{ 'Quản trị viên' if u.VaiTro == 'admin' else 'Nhân viên' }}
+                <strong>{{ u.TenNV }}</strong>
+                <div style="font-size:0.78rem;color:var(--slate-500);">@{{ u.TenDangNhap }}</div>
+              </td>
+              <td>
+                <span class="badge {{ 'badge-gold' if u.VaiTro == 'QuanLy' else 'badge-info' }}">
+                  {{ 'Quản lý' if u.VaiTro == 'QuanLy' else 'Nhân viên' }}
                 </span>
               </td>
               <td class="text-center">
-                {% if u.VaiTro == 'admin' %}
-                  <span class="badge badge-success">Mặc định (Quản lý)</span>
+                {% if u.VaiTro == 'QuanLy' %}
+                  <span class="badge badge-success">Mặc định</span>
                 {% else %}
                   <form method="post" style="display:inline;">
                     <input type="hidden" name="action" value="toggle_user_revert">
-                    <input type="hidden" name="MaND" value="{{ u.MaND }}">
+                    <input type="hidden" name="MaNV" value="{{ u.MaNV }}">
                     <button type="submit" class="btn btn-sm {{ 'btn-success' if u.CoQuyenChuyenNguoc else 'btn-outline' }}">
                       {{ 'Đang bật' if u.CoQuyenChuyenNguoc else 'Đang tắt' }}
                     </button>
                   </form>
                 {% endif %}
               </td>
-              <td class="text-right">
-                {% if u.MaND != g.user.MaND %}
-                  <form method="post" style="display:inline;" onsubmit="return confirm('Xóa tài khoản này?');">
-                    <input type="hidden" name="action" value="delete_user">
-                    <input type="hidden" name="MaND" value="{{ u.MaND }}">
-                    <button type="submit" class="btn btn-danger btn-sm">Xóa</button>
+              <td class="text-center">
+                <span class="badge {{ 'badge-success' if u.TinhTrang == 'Đang làm việc' else 'badge-danger' }}">
+                  {{ u.TinhTrang }}
+                </span>
+              </td>
+              <td class="text-right" style="white-space:nowrap;">
+                {% if u.MaNV != g.user.MaNV %}
+                  <form method="post" style="display:inline;">
+                    <input type="hidden" name="action" value="toggle_user_status">
+                    <input type="hidden" name="MaNV" value="{{ u.MaNV }}">
+                    <button type="submit" class="btn btn-outline btn-sm">
+                      {{ 'Khóa TK' if u.TinhTrang == 'Đang làm việc' else 'Mở lại' }}
+                    </button>
                   </form>
+                  <form method="post" style="display:inline;" onsubmit="return confirm('Xóa vĩnh viễn tài khoản {{ u.MaNV }}?');">
+                    <input type="hidden" name="action" value="delete_user">
+                    <input type="hidden" name="MaNV" value="{{ u.MaNV }}">
+                    <button type="submit" class="btn btn-danger btn-sm"
+                            {{ 'disabled title="Tài khoản đã phát sinh chứng từ/nhật ký, chỉ có thể chuyển sang Đã nghỉ việc"' if u.DaPhatSinh else '' }}>
+                      Xóa
+                    </button>
+                  </form>
+                {% else %}
+                  <span style="font-size:0.78rem;color:var(--slate-500);">Đang đăng nhập</span>
                 {% endif %}
               </td>
             </tr>
@@ -98,7 +175,7 @@
 </div>
 
 <div class="card">
-  <h3 class="card-title">Nhật ký thay đổi quy định &amp; tham số</h3>
+  <h3 class="card-title">📜 Nhật ký thay đổi quy định cấu hình (chỉ ghi thêm)</h3>
   <div class="table-wrap">
     <table class="table">
       <thead>
@@ -117,10 +194,10 @@
           <tr>
             <td>{{ log.ThoiDiemCapNhat|date }}</td>
             <td><span class="badge badge-gold">{{ log.LoaiQuyDinh }}</span></td>
-            <td>{{ log.MaDoiTuong }}</td>
+            <td><strong>{{ log.MaDoiTuong }}</strong></td>
             <td style="color:var(--slate-500);">{{ log.GiaTriCu or '—' }}</td>
-            <td style="font-weight:700;">{{ log.GiaTriMoi }}</td>
-            <td>{{ log.NguoiCapNhat or '—' }}</td>
+            <td style="font-weight:700;color:var(--obsidian);">{{ log.GiaTriMoi }}</td>
+            <td>{{ log.NguoiCapNhat or log.MaNV_CapNhat }}</td>
             <td>{{ log.GhiChu or '—' }}</td>
           </tr>
         {% else %}

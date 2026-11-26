@@ -1,20 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#fffdf8"/>
-      <stop offset="100%" stop-color="#f3e6c8"/>
+    <radialGradient id="studio" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#fffefb"/>
+      <stop offset="65%" stop-color="#f7f0e2"/>
+      <stop offset="100%" stop-color="#eadbc0"/>
+    </radialGradient>
+    <linearGradient id="band" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff1ad"/>
+      <stop offset="32%" stop-color="#e3b649"/>
+      <stop offset="68%" stop-color="#b98319"/>
+      <stop offset="100%" stop-color="#7c5207"/>
     </linearGradient>
-    <linearGradient id="ringGold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ffe47a"/>
-      <stop offset="50%" stop-color="#d8a224"/>
-      <stop offset="100%" stop-color="#96680a"/>
+    <linearGradient id="bandInner" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#9e6d0e"/>
+      <stop offset="50%" stop-color="#e5bb56"/>
+      <stop offset="100%" stop-color="#fff3be"/>
     </linearGradient>
+    <linearGradient id="diaTop" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="60%" stop-color="#d8f0ff"/>
+      <stop offset="100%" stop-color="#8ec7eb"/>
+    </linearGradient>
+    <linearGradient id="diaBot" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c3e6ff"/>
+      <stop offset="100%" stop-color="#4d92bf"/>
+    </linearGradient>
+    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#5d451c" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#5d451c" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="320" height="240" rx="16" fill="url(#bg)"/>
-  <ellipse cx="160" cy="145" rx="58" ry="48" fill="none" stroke="url(#ringGold)" stroke-width="18"/>
-  <ellipse cx="160" cy="145" rx="58" ry="48" fill="none" stroke="#fff3b8" stroke-width="3" opacity="0.7"/>
-  <polygon points="160,48 186,68 172,96 148,96 134,68" fill="#dbf3ff" stroke="#5ca7d4" stroke-width="2"/>
-  <polygon points="160,48 172,96 148,96" fill="#ffffff" opacity="0.65"/>
-  <polygon points="134,68 186,68 160,48" fill="#b8e5ff" opacity="0.7"/>
-  <path d="M144,95 L140,104 M176,95 L180,104" stroke="#b58112" stroke-width="5" stroke-linecap="round"/>
+  <rect width="400" height="300" fill="url(#studio)"/>
+  <ellipse cx="200" cy="242" rx="88" ry="16" fill="url(#shadow)"/>
+  <ellipse cx="200" cy="176" rx="68" ry="56" fill="none" stroke="url(#band)" stroke-width="18"/>
+  <ellipse cx="200" cy="176" rx="60" ry="48" fill="none" stroke="url(#bandInner)" stroke-width="4" opacity="0.8"/>
+  <ellipse cx="200" cy="176" rx="74" ry="62" fill="none" stroke="#fff7d6" stroke-width="1.5" opacity="0.6"/>
+  <g transform="translate(0,4)">
+    <polygon points="166,82 234,82 246,102 154,102" fill="url(#diaTop)" stroke="#5b96bd" stroke-width="1.5"/>
+    <polygon points="154,102 246,102 200,136" fill="url(#diaBot)" stroke="#5b96bd" stroke-width="1.5"/>
+    <polygon points="180,82 220,82 224,102 176,102" fill="#ffffff" opacity="0.8"/>
+    <polygon points="176,102 224,102 200,136" fill="#e6f6ff" opacity="0.65"/>
+    <line x1="200" y1="82" x2="200" y2="136" stroke="#ffffff" stroke-width="1.2" opacity="0.7"/>
+    <path d="M174,117 L168,128 M226,117 L232,128" stroke="#b68018" stroke-width="5.5" stroke-linecap="round"/>
+  </g>
+  <path d="M244,64 L247,74 L257,77 L247,80 L244,90 L241,80 L231,77 L241,74 Z" fill="#ffffff" opacity="0.92"/>
 </svg>

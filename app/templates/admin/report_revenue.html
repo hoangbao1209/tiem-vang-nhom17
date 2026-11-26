@@ -2,11 +2,13 @@
 {% block content %}
 <div class="page-header no-print">
   <div>
-    <h1>Báo cáo doanh thu (Tháng {{ thang }}/{{ nam }})</h1>
-    <div style="color:var(--slate-500);font-size:0.9rem;">
-      Trạng thái kỳ:
-      {% if ky %}
-        <span class="badge badge-success">Đã chốt ({{ ky.NgayChot|date }} — {{ ky.NguoiChot or 'Quản lý' }})</span>
+    <h1>Báo cáo Doanh thu — Tháng {{ '%02d'|format(thang) }}/{{ nam }}</h1>
+    <div class="page-subtitle">
+      Trạng thái kỳ kế toán:
+      {% if ky and ky.TrangThai == 'Đã khóa' %}
+        <span class="badge badge-dark">🔒 Đã khóa sổ ({{ ky.NgayKhoa|date }})</span>
+      {% elif ky and ky.TrangThai == 'Đã chốt' %}
+        <span class="badge badge-success">✓ Đã chốt ({{ ky.NgayChot|date }} — {{ ky.NguoiChot or 'Quản lý' }})</span>
       {% else %}
         <span class="badge badge-warning">Đang mở</span>
       {% endif %}
@@ -14,141 +16,184 @@
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
     <form method="get" style="display:flex;gap:8px;align-items:center;">
-      <label style="font-weight:600;">Tháng:</label>
-      <select name="thang" style="width:85px;">
+      <label style="font-weight:600;font-size:0.86rem;">Tháng:</label>
+      <select name="thang" style="width:80px;">
         {% for m in range(1, 13) %}
           <option value="{{ m }}" {{ 'selected' if m == thang else '' }}>{{ m }}</option>
         {% endfor %}
       </select>
-      <label style="font-weight:600;">Năm:</label>
-      <input type="number" name="nam" value="{{ nam }}" min="2020" max="2035" style="width:95px;">
+      <label style="font-weight:600;font-size:0.86rem;">Năm:</label>
+      <input type="number" name="nam" value="{{ nam }}" min="2020" max="2035" style="width:92px;">
       <button type="submit" class="btn btn-primary">Xem báo cáo</button>
     </form>
-    {% if g.user.VaiTro == 'admin' and not ky %}
-      <form action="{{ url_for('admin.close_period') }}" method="post" onsubmit="return confirm('Chốt số liệu báo cáo tháng {{ thang }}/{{ nam }}?');">
-        <input type="hidden" name="thang" value="{{ thang }}">
-        <input type="hidden" name="nam" value="{{ nam }}">
-        <button type="submit" class="btn btn-success">🔒 Chốt kỳ báo cáo</button>
-      </form>
+    {% if g.user.VaiTro == 'QuanLy' %}
+      {% if not ky %}
+        <form action="{{ url_for('admin.close_period') }}" method="post" onsubmit="return confirm('Chốt số liệu báo cáo tháng {{ '%02d'|format(thang) }}/{{ nam }}?');">
+          <input type="hidden" name="thang" value="{{ thang }}">
+          <input type="hidden" name="nam" value="{{ nam }}">
+          <button type="submit" class="btn btn-success">✓ Chốt kỳ</button>
+        </form>
+      {% elif ky.TrangThai == 'Đã chốt' %}
+        <form action="{{ url_for('admin.lock_period') }}" method="post" onsubmit="return confirm('Khóa sổ kỳ tháng {{ '%02d'|format(thang) }}/{{ nam }}?');">
+          <input type="hidden" name="thang" value="{{ thang }}">
+          <input type="hidden" name="nam" value="{{ nam }}">
+          <button type="submit" class="btn btn-dark">🔒 Khóa kỳ</button>
+        </form>
+      {% endif %}
     {% endif %}
-    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ In</button>
+    <button type="button" class="btn btn-outline" onclick="window.print()">🖨️ In báo cáo</button>
   </div>
 </div>
 
 <div class="kpi-grid">
   <div class="kpi-card">
-    <div class="kpi-label">1. Doanh thu bán hàng</div>
+    <div class="kpi-label">1. Tổng doanh thu bán hàng</div>
     <div class="kpi-value" style="color:var(--gold-600);">{{ tong_ban|vnd }}</div>
   </div>
-  <div class="kpi-card">
-    <div class="kpi-label">2. Doanh thu dịch vụ (thực thu)</div>
-    <div class="kpi-value">{{ tong_dv|vnd }}</div>
+  <div class="kpi-card kpi-sapphire">
+    <div class="kpi-label">2. Tổng doanh thu dịch vụ (thực thu)</div>
+    <div class="kpi-value" style="color:var(--sapphire);">{{ tong_dv|vnd }}</div>
   </div>
-  <div class="kpi-card">
-    <div class="kpi-label">Tổng doanh thu tháng {{ thang }}/{{ nam }}</div>
-    <div class="kpi-value" style="color:var(--success);">{{ tong_chung|vnd }}</div>
-  </div>
-</div>
-
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:20px;">
-  <div class="card">
-    <h3 class="card-title">1. Doanh thu bán hàng</h3>
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>STT</th>
-            <th>Ngày</th>
-            <th class="text-center">Số giao dịch</th>
-            <th class="text-right">Doanh thu</th>
-            <th class="text-right">Tỷ lệ (%)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for d in sale_days %}
-            <tr>
-              <td>{{ loop.index }}</td>
-              <td>{{ d.Ngay|date }}</td>
-              <td class="text-center">{{ d.SoGD }}</td>
-              <td class="text-right" style="font-weight:700;color:var(--gold-600);">{{ d.DoanhThu|vnd }}</td>
-              <td class="text-right">{{ d.TyLe }}%</td>
-            </tr>
-          {% else %}
-            <tr><td colspan="5" class="text-center">Chưa phát sinh doanh thu bán hàng.</td></tr>
-          {% endfor %}
-        </tbody>
-        <tfoot>
-          <tr>
-            <th colspan="3" class="text-right">Tổng doanh thu bán hàng:</th>
-            <th class="text-right" style="color:var(--gold-600);">{{ tong_ban|vnd }}</th>
-            <th class="text-right">{{ '100%' if tong_ban > 0 else '0%' }}</th>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3 class="card-title">2. Doanh thu dịch vụ</h3>
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>STT</th>
-            <th>Ngày</th>
-            <th class="text-center">Số giao dịch</th>
-            <th class="text-right">Doanh thu</th>
-            <th class="text-right">Tỷ lệ (%)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for d in sv_days %}
-            <tr>
-              <td>{{ loop.index }}</td>
-              <td>{{ d.Ngay|date }}</td>
-              <td class="text-center">{{ d.SoGD }}</td>
-              <td class="text-right" style="font-weight:700;color:var(--gold-600);">{{ d.DoanhThu|vnd }}</td>
-              <td class="text-right">{{ d.TyLe }}%</td>
-            </tr>
-          {% else %}
-            <tr><td colspan="5" class="text-center">Chưa phát sinh thu tiền dịch vụ.</td></tr>
-          {% endfor %}
-        </tbody>
-        <tfoot>
-          <tr>
-            <th colspan="3" class="text-right">Tổng doanh thu dịch vụ:</th>
-            <th class="text-right" style="color:var(--gold-600);">{{ tong_dv|vnd }}</th>
-            <th class="text-right">{{ '100%' if tong_dv > 0 else '0%' }}</th>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+  <div class="kpi-card kpi-emerald">
+    <div class="kpi-label">Tổng doanh thu tháng {{ '%02d'|format(thang) }}/{{ nam }}</div>
+    <div class="kpi-value" style="color:var(--emerald);">{{ tong_chung|vnd }}</div>
   </div>
 </div>
 
 <div class="card">
-  <h3 class="card-title">Top sản phẩm bán chạy trong tháng {{ thang }}/{{ nam }}</h3>
-  <table class="table">
-    <thead>
-      <tr>
-        <th>STT</th>
-        <th>Sản phẩm</th>
-        <th class="text-center">Số lượng bán</th>
-        <th class="text-right">Doanh thu</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for t in top %}
+  <div class="voucher-sheet-head">
+    <div class="voucher-sheet-brand">{{ store.TenCuaHang }}</div>
+    <h2 class="voucher-sheet-title">BÁO CÁO DOANH THU THÁNG {{ '%02d'|format(thang) }}/{{ nam }}</h2>
+    <div style="font-size:0.86rem;color:var(--slate-500);">Chỉ hiển thị các ngày có phát sinh giao dịch trong kỳ</div>
+  </div>
+
+  <div class="split-grid">
+    <div>
+      <h3 class="card-title">1. Doanh thu bán hàng</h3>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th>Ngày</th>
+              <th class="text-center">Số giao dịch</th>
+              <th class="text-right">Doanh thu</th>
+              <th class="text-right">Tỷ lệ (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in sale_days %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ d.Ngay|date }}</td>
+                <td class="text-center">{{ d.SoGD }}</td>
+                <td class="text-right" style="font-weight:700;color:var(--gold-600);">{{ d.DoanhThu|vnd }}</td>
+                <td class="text-right">{{ d.TyLe }}%</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="5" class="text-center">Chưa phát sinh doanh thu bán hàng.</td></tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="3" class="text-right">Tổng doanh thu bán hàng:</th>
+              <th class="text-right" style="color:var(--gold-600);">{{ tong_ban|vnd }}</th>
+              <th class="text-right">{{ '100%' if tong_ban > 0 else '0%' }}</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="card-title">2. Doanh thu dịch vụ</h3>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th>Ngày</th>
+              <th class="text-center">Số giao dịch</th>
+              <th class="text-right">Doanh thu</th>
+              <th class="text-right">Tỷ lệ (%)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in sv_days %}
+              <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ d.Ngay|date }}</td>
+                <td class="text-center">{{ d.SoGD }}</td>
+                <td class="text-right" style="font-weight:700;color:var(--sapphire);">{{ d.DoanhThu|vnd }}</td>
+                <td class="text-right">{{ d.TyLe }}%</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="5" class="text-center">Chưa phát sinh doanh thu dịch vụ.</td></tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="3" class="text-right">Tổng doanh thu dịch vụ:</th>
+              <th class="text-right" style="color:var(--sapphire);">{{ tong_dv|vnd }}</th>
+              <th class="text-right">{{ '100%' if tong_dv > 0 else '0%' }}</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;padding:14px 18px;border-radius:12px;background:var(--gold-50);border:1px solid var(--gold-200);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+    <strong style="font-size:1rem;color:var(--obsidian);">TỔNG DOANH THU THÁNG {{ '%02d'|format(thang) }}/{{ nam }} (Bán hàng + Dịch vụ):</strong>
+    <strong class="num" style="font-size:1.35rem;color:var(--emerald);">{{ tong_chung|vnd }}</strong>
+  </div>
+
+  <div class="signature-grid">
+    <div class="signature-box">
+      <strong>Người lập báo cáo</strong>
+      <span>{{ g.user.TenNV }}</span>
+      <div class="signature-space"></div>
+    </div>
+    <div class="signature-box">
+      <strong>Kế toán cửa hàng</strong>
+      <span>(Ký, ghi rõ họ tên)</span>
+      <div class="signature-space"></div>
+    </div>
+    <div class="signature-box">
+      <strong>Quản lý cửa hàng</strong>
+      <span>(Ký duyệt)</span>
+      <div class="signature-space"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card no-print">
+  <h3 class="card-title">🏆 Top sản phẩm bán chạy tháng {{ '%02d'|format(thang) }}/{{ nam }}</h3>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
         <tr>
-          <td>{{ loop.index }}</td>
-          <td><strong>{{ t.TenSP }}</strong></td>
-          <td class="text-center">{{ t.SoLuong }}</td>
-          <td class="text-right" style="font-weight:700;color:var(--gold-600);">{{ t.DoanhThu|vnd }}</td>
+          <th>STT</th>
+          <th>Mã SP</th>
+          <th>Sản phẩm</th>
+          <th class="text-center">Số lượng bán</th>
+          <th class="text-right">Doanh thu</th>
         </tr>
-      {% else %}
-        <tr><td colspan="4" class="text-center">Chưa có dữ liệu sản phẩm bán ra.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {% for t in top %}
+          <tr>
+            <td>{{ loop.index }}</td>
+            <td><strong>{{ t.MaSP }}</strong></td>
+            <td><strong>{{ t.TenSP }}</strong></td>
+            <td class="text-center">{{ t.SoLuong|qty }} {{ t.TenDVT }}</td>
+            <td class="text-right" style="font-weight:700;color:var(--gold-600);">{{ t.DoanhThu|vnd }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="5" class="text-center">Chưa có dữ liệu sản phẩm bán ra trong tháng này.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 {% endblock %}

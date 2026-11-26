@@ -3,22 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}{{ store.TenCuaHang }} – Vàng Bạc Đá Quý{% endblock %}</title>
+  <title>{% block title %}{{ store.TenCuaHang }} — Trang sức Vàng Bạc &amp; Đá Quý{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
   <div class="topbar">
     <div class="container topbar-inner">
-      <div>📍 {{ store.DiaChi }} &nbsp;|&nbsp; ☎️ {{ store.SoDienThoai }}</div>
-      <div>
+      <div>📍 {{ store.DiaChi }} &nbsp;•&nbsp; ☎️ {{ store.SoDienThoai }}</div>
+      <div class="topbar-links">
         <a href="{{ url_for('shop.order_lookup') }}">Tra cứu đơn hàng</a>
-        &nbsp;•&nbsp;
         {% if g.user %}
-          <a href="{{ url_for('admin.dashboard') }}">Quản lý cửa hàng ({{ g.user.HoTen }})</a>
-          &nbsp;•&nbsp;
+          <a href="{{ url_for('admin.dashboard') }}">Vào trang quản lý ({{ g.user.TenNV }})</a>
           <a href="{{ url_for('auth.logout') }}">Đăng xuất</a>
         {% else %}
-          <a href="{{ url_for('auth.login') }}">Đăng nhập nhân viên</a>
+          <a href="{{ url_for('auth.login') }}">Đăng nhập nội bộ</a>
         {% endif %}
       </div>
     </div>
@@ -30,12 +31,12 @@
         <div class="brand-mark">KN</div>
         <div>
           <div class="brand-title">{{ store.TenCuaHang }}</div>
-          <div class="brand-sub">Vàng bạc • Đá quý • Chế tác trang sức</div>
+          <div class="brand-sub">Vàng Bạc • Đá Quý • Kim Hoàn</div>
         </div>
       </a>
 
       <form class="search-box" action="{{ url_for('shop.products') }}" method="get">
-        <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="Tìm nhẫn vàng, dây chuyền, kim cương, mã sản phẩm...">
+        <input type="text" name="q" value="{{ request.args.get('q', '') }}" placeholder="Tìm nhẫn vàng 24K, dây chuyền, kim cương, mã SP...">
         <button type="submit">Tìm kiếm</button>
       </form>
 
@@ -49,13 +50,13 @@
     <nav class="nav-bar">
       <div class="container nav-links">
         <a href="{{ url_for('shop.index') }}" class="{{ 'active' if request.endpoint == 'shop.index' else '' }}">Trang chủ</a>
-        <a href="{{ url_for('shop.products') }}" class="{{ 'active' if request.endpoint == 'shop.products' and not request.args.get('loai') else '' }}">Tất cả sản phẩm</a>
+        <a href="{{ url_for('shop.products') }}" class="{{ 'active' if request.endpoint == 'shop.products' and not request.args.get('loai') else '' }}">Bộ sưu tập</a>
         {% for c in nav_categories %}
           <a href="{{ url_for('shop.products', loai=c.MaLoaiSP) }}"
-             class="{{ 'active' if request.args.get('loai')|int == c.MaLoaiSP else '' }}">{{ c.TenLoaiSP }}</a>
+             class="{{ 'active' if request.args.get('loai') == c.MaLoaiSP else '' }}">{{ c.TenLoaiSP }}</a>
         {% endfor %}
         <a href="{{ url_for('shop.dich_vu') }}" class="{{ 'active' if request.endpoint == 'shop.dich_vu' else '' }}">Dịch vụ kim hoàn</a>
-        <a href="{{ url_for('shop.order_lookup') }}" class="{{ 'active' if request.endpoint == 'shop.order_lookup' else '' }}">Tra cứu đơn hàng</a>
+        <a href="{{ url_for('shop.order_lookup') }}" class="{{ 'active' if request.endpoint == 'shop.order_lookup' else '' }}">Tra cứu đơn</a>
       </div>
     </nav>
   </header>
@@ -66,7 +67,10 @@
         {% if messages %}
           <div class="flash-list">
             {% for cat, msg in messages %}
-              <div class="alert alert-{{ cat }}">{{ msg }}</div>
+              <div class="alert alert-{{ cat }}">
+                <span>{{ msg }}</span>
+                <button type="button" class="alert-close" aria-label="Đóng">×</button>
+              </div>
             {% endfor %}
           </div>
         {% endif %}
@@ -76,23 +80,34 @@
   </main>
 
   <footer class="site-footer">
-    <div class="container footer-grid">
-      <div>
-        <h4>{{ store.TenCuaHang }}</h4>
-        <p>Hệ thống kinh doanh vàng bạc đá quý uy tín, chuẩn tuổi vàng, minh bạch nguồn gốc kiểm định và dịch vụ chăm sóc trang sức trọn đời.</p>
-        <p>📍 {{ store.DiaChi }}<br>☎️ {{ store.SoDienThoai }} – ✉️ {{ store.Email }}</p>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <h4>{{ store.TenCuaHang }}</h4>
+          <p style="margin-top:0;">{{ store.KhauHieu }}. Cam kết chuẩn hàm lượng vàng, kiểm định minh bạch và dịch vụ chăm sóc trang sức trọn đời.</p>
+          <p style="margin-bottom:0;">
+            📍 {{ store.DiaChi }}<br>
+            ☎️ {{ store.SoDienThoai }} &nbsp;|&nbsp; ✉️ {{ store.Email }}<br>
+            🕒 {{ store.GioMoCua }}
+          </p>
+        </div>
+        <div>
+          <h4>Danh mục trang sức</h4>
+          {% for c in nav_categories[:6] %}
+            <div style="margin-bottom:5px;"><a href="{{ url_for('shop.products', loai=c.MaLoaiSP) }}">• {{ c.TenLoaiSP }}</a></div>
+          {% endfor %}
+        </div>
+        <div>
+          <h4>Dịch vụ &amp; Hỗ trợ</h4>
+          <div style="margin-bottom:6px;"><a href="{{ url_for('shop.dich_vu') }}">• Bảng giá dịch vụ kim hoàn</a></div>
+          <div style="margin-bottom:6px;"><a href="{{ url_for('shop.order_lookup') }}">• Tra cứu hóa đơn &amp; đơn đặt giữ</a></div>
+          <div style="margin-bottom:6px;"><a href="{{ url_for('shop.cart') }}">• Giỏ hàng của bạn</a></div>
+          <div style="margin-bottom:6px;"><a href="{{ url_for('admin.dashboard') }}">• Hệ thống quản lý cửa hàng</a></div>
+        </div>
       </div>
-      <div>
-        <h4>Danh mục trang sức</h4>
-        {% for c in nav_categories[:5] %}
-          <div><a href="{{ url_for('shop.products', loai=c.MaLoaiSP) }}">• {{ c.TenLoaiSP }}</a></div>
-        {% endfor %}
-      </div>
-      <div>
-        <h4>Hỗ trợ khách hàng</h4>
-        <div><a href="{{ url_for('shop.dich_vu') }}">• Dịch vụ gia công & bảo hành</a></div>
-        <div><a href="{{ url_for('shop.order_lookup') }}">• Tra cứu hóa đơn / đơn đặt hàng</a></div>
-        <div><a href="{{ url_for('admin.dashboard') }}">• Hệ thống quản lý nội bộ</a></div>
+      <div class="footer-bottom">
+        <span>© {{ today[:4] }} {{ store.TenCuaHang }} — Hệ thống Quản lý &amp; Kinh doanh Vàng Bạc Đá Quý</span>
+        <span>Đồ án Nhập môn Công nghệ Phần mềm • SE104.R11 – Nhóm 17</span>
       </div>
     </div>
   </footer>

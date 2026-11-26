@@ -1,16 +1,16 @@
-"""Hàm tiện ích dùng chung: định dạng tiền/ngày, đọc dữ liệu form, lỗi nghiệp vụ."""
+"""Hàm tiện ích chung: định dạng tiền tệ/số lượng/ngày tháng, xác thực đầu vào, BusinessError."""
 from datetime import date, datetime
 
-from flask import session, url_for
+from flask import current_app, session, url_for
 
-PLACEHOLDER_IMG = "img/products/gem.svg"
+PLACEHOLDER_IMG = "img/products/ring-solitaire.jpg"
 
 
 class BusinessError(Exception):
-    """Lỗi vi phạm quy định nghiệp vụ (hiển thị trực tiếp cho người dùng)."""
+    """Lỗi vi phạm quy định nghiệp vụ (hiển thị rõ nguyên nhân cho người dùng – CL03)."""
 
 
-# ---------- Chuyển kiểu an toàn ----------
+# ------------------------------------------------------------------ CHUYỂN KIỂU AN TOÀN
 def to_int(value, default=None):
     try:
         return int(str(value).strip())
@@ -20,27 +20,31 @@ def to_int(value, default=None):
 
 def to_float(value, default=None):
     try:
-        return float(str(value).strip())
+        s = str(value).strip().replace(",", ".")
+        return float(s)
     except (TypeError, ValueError):
         return default
 
 
 def parse_date(value, label="Ngày"):
+    s = (value or "").strip()
+    if len(s) >= 10:
+        s = s[:10]
     try:
-        return datetime.strptime((value or "").strip(), "%Y-%m-%d").date().isoformat()
+        return datetime.strptime(s, "%Y-%m-%d").date().isoformat()
     except ValueError:
-        raise BusinessError(f"{label} không hợp lệ.")
+        raise BusinessError(f"{label} không hợp lệ (định dạng chuẩn YYYY-MM-DD).")
 
 
-def validate_ngay_lap(value):
-    d = parse_date(value, "Ngày lập")
+def validate_ngay_lap(value, label="Ngày lập"):
+    d = parse_date(value, label)
     if d > date.today().isoformat():
-        raise BusinessError("Ngày lập không được sau ngày hiện tại.")
+        raise BusinessError(f"{label} không được lớn hơn ngày hiện tại ({date.today().strftime('%d/%m/%Y')}).")
     return d
 
 
 def rows_from_form(form, fields):
-    """Gom các input cùng tên (MaSP, SoLuong, ...) thành danh sách dòng chi tiết."""
+    """Gom các cột dữ liệu mảng từ form thành danh sách từ điển từng dòng."""
     cols = [form.getlist(f) for f in fields]
     n = max((len(c) for c in cols), default=0)
     return [
@@ -49,7 +53,7 @@ def rows_from_form(form, fields):
     ]
 
 
-# ---------- Định dạng hiển thị ----------
+# ------------------------------------------------------------------ ĐỊNH DẠNG HIỂN THỊ (YCHT06)
 def format_vnd(value):
     if value is None or value == "":
         value = 0
@@ -66,21 +70,62 @@ def format_number(value):
         return value
 
 
+def format_qty(value):
+    """Hiển thị số lượng gọn: 2.0 -> '2', 1.5 -> '1.5', 0.25 -> '0.25'."""
+    if value is None or value == "":
+        return "0"
+    try:
+        num = round(float(value), 3)
+        if abs(num - round(num)) < 1e-9:
+            return str(int(round(num)))
+        return f"{num:g}"
+    except (TypeError, ValueError):
+        return str(value)
+
+
+def format_pct(value):
+    """Hiển thị tỷ lệ thập phân sang %: 0.15 -> '15%', 0.025 -> '2.5%'."""
+    if value is None or value == "":
+        return "0%"
+    try:
+        pct = round(float(value) * 100.0, 2)
+        if abs(pct - round(pct)) < 1e-9:
+            return f"{int(round(pct))}%"
+        return f"{pct:g}%"
+    except (TypeError, ValueError):
+        return str(value)
+
+
+def format_pct_num(value):
+    """Chuyển tỷ lệ thập phân thành số % dùng trong ô input: 0.15 -> 15."""
+    if value is None or value == "":
+        return 0
+    try:
+        pct = round(float(value) * 100.0, 2)
+        if abs(pct - round(pct)) < 1e-9:
+            return int(round(pct))
+        return pct
+    except (TypeError, ValueError):
+        return 0
+
+
 def format_plain(value):
-    """15.0 -> 15 ; 12.5 -> 12.5 (dùng cho ô nhập liệu)."""
-    if isinstance(value, float) and value.is_integer():
-        return int(value)
-    return "" if value is None else value
+    """Dùng cho thuộc tính value của input số: 150000.0 -> 150000."""
+    if value is None:
+        return ""
+    if isinstance(value, float) and abs(value - round(value)) < 1e-9:
+        return int(round(value))
+    return value
 
 
 def format_date(value):
     if not value:
         return ""
-    s = str(value)
+    s = str(value).strip()
     try:
-        if len(s) > 10:
+        if len(s) >= 16:
             return datetime.strptime(s[:16], "%Y-%m-%d %H:%M").strftime("%d/%m/%Y %H:%M")
-        return datetime.strptime(s, "%Y-%m-%d").strftime("%d/%m/%Y")
+        return datetime.strptime(s[:10], "%Y-%m-%d").strftime("%d/%m/%Y")
     except ValueError:
         return s
 
@@ -95,6 +140,9 @@ def product_img(p):
 def register_template_helpers(app):
     app.jinja_env.filters["vnd"] = format_vnd
     app.jinja_env.filters["num"] = format_number
+    app.jinja_env.filters["qty"] = format_qty
+    app.jinja_env.filters["pct"] = format_pct
+    app.jinja_env.filters["pct_num"] = format_pct_num
     app.jinja_env.filters["plain"] = format_plain
     app.jinja_env.filters["date"] = format_date
     app.jinja_env.globals["product_img"] = product_img
@@ -102,14 +150,16 @@ def register_template_helpers(app):
     @app.context_processor
     def inject_globals():
         from .db import get_db
-        from .services.settings import get_params
+        from . import repositories as repo
 
         db = get_db()
         cart = session.get("cart", {})
-        cats = db.execute("SELECT MaLoaiSP, TenLoaiSP FROM LOAISANPHAM ORDER BY MaLoaiSP").fetchall()
+        cats = repo.list_categories(db)
+        tham_so = repo.get_tham_so(db)
         return {
             "cart_count": sum(cart.values()),
             "nav_categories": cats,
-            "store": get_params(db),
+            "store": current_app.config["STORE_INFO"],
             "today": date.today().isoformat(),
+            "ti_le_tra_truoc_pct": format_pct_num(tham_so["TiLeTraTruoc"]),
         }

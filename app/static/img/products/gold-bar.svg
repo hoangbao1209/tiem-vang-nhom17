@@ -1,29 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#fffdf7"/>
-      <stop offset="100%" stop-color="#f5ead0"/>
-    </linearGradient>
+    <radialGradient id="studio" cx="50%" cy="42%" r="65%">
+      <stop offset="0%" stop-color="#fffefb"/>
+      <stop offset="65%" stop-color="#f7f0e2"/>
+      <stop offset="100%" stop-color="#eadcc2"/>
+    </radialGradient>
     <linearGradient id="goldTop" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#ffe885"/>
-      <stop offset="50%" stop-color="#eab839"/>
-      <stop offset="100%" stop-color="#b88414"/>
+      <stop offset="0%" stop-color="#fff0a8"/>
+      <stop offset="35%" stop-color="#e5b84b"/>
+      <stop offset="72%" stop-color="#c99322"/>
+      <stop offset="100%" stop-color="#9e6d0d"/>
     </linearGradient>
-    <linearGradient id="goldSide" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#d49e21"/>
-      <stop offset="100%" stop-color="#8c6109"/>
+    <linearGradient id="goldFront" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#b47e13"/>
+      <stop offset="50%" stop-color="#dfae3e"/>
+      <stop offset="100%" stop-color="#875a08"/>
     </linearGradient>
+    <linearGradient id="goldLeft" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d9a42f"/>
+      <stop offset="100%" stop-color="#7c5206"/>
+    </linearGradient>
+    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#5d451c" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#5d451c" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="320" height="240" rx="16" fill="url(#bg)"/>
-  <g transform="translate(55,60)">
-    <polygon points="25,35 155,15 205,65 75,85" fill="url(#goldTop)" stroke="#8c6109" stroke-width="2"/>
-    <polygon points="10,70 25,35 75,85 60,120" fill="#c7921b" stroke="#8c6109" stroke-width="2"/>
-    <polygon points="75,85 205,65 190,100 60,120" fill="url(#goldSide)" stroke="#8c6109" stroke-width="2"/>
-    <text x="115" y="56" font-family="Georgia, serif" font-size="16" font-weight="bold" fill="#704c04" text-anchor="middle" transform="rotate(-8 115 56)">999.9</text>
-    <text x="115" y="72" font-family="Georgia, serif" font-size="10" fill="#704c04" text-anchor="middle" transform="rotate(-8 115 72)">FINE GOLD</text>
+  <rect width="400" height="300" fill="url(#studio)"/>
+  <ellipse cx="205" cy="226" rx="125" ry="22" fill="url(#shadow)"/>
+  <g transform="translate(68,78)">
+    <polygon points="44,44 218,16 268,74 96,102" fill="url(#goldTop)" stroke="#9b6c0e" stroke-width="1.8" stroke-linejoin="round"/>
+    <polygon points="24,84 44,44 96,102 78,142" fill="url(#goldLeft)" stroke="#8c5f09" stroke-width="1.8" stroke-linejoin="round"/>
+    <polygon points="96,102 268,74 252,114 78,142" fill="url(#goldFront)" stroke="#8c5f09" stroke-width="1.8" stroke-linejoin="round"/>
+    <polygon points="56,48 211,23 254,70 100,95" fill="none" stroke="#fff4c4" stroke-width="1.2" opacity="0.65"/>
+    <text x="155" y="61" font-family="Georgia, serif" font-size="22" font-weight="bold" fill="#6b4604" text-anchor="middle" transform="rotate(-9 155 61)" letter-spacing="2">999.9</text>
+    <text x="157" y="79" font-family="Georgia, serif" font-size="10" font-weight="bold" fill="#7c5308" text-anchor="middle" transform="rotate(-9 157 79)" letter-spacing="2.5">FINE GOLD</text>
   </g>
-  <g fill="#fff6cc" opacity="0.9">
-    <polygon points="90,45 94,55 104,59 94,63 90,73 86,63 76,59 86,55"/>
-    <polygon points="235,85 238,92 245,95 238,98 235,105 232,98 225,95 232,92"/>
+  <g fill="#ffffff" opacity="0.92">
+    <path d="M116,66 L119,77 L130,80 L119,83 L116,94 L113,83 L102,80 L113,77 Z"/>
+    <path d="M298,108 L300,115 L307,117 L300,119 L298,126 L296,119 L289,117 L296,115 Z" opacity="0.75"/>
   </g>
 </svg>

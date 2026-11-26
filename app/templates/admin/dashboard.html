@@ -2,8 +2,8 @@
 {% block content %}
 <div class="page-header">
   <div>
-    <h1>Tổng quan hoạt động (Tháng {{ thang }}/{{ nam }})</h1>
-    <div style="color:var(--slate-500);font-size:0.9rem;">Theo dõi doanh thu, đơn đặt hàng trực tuyến, phiếu dịch vụ và cảnh báo tồn kho.</div>
+    <h1>Tổng quan hoạt động — Tháng {{ '%02d'|format(thang) }}/{{ nam }}</h1>
+    <div class="page-subtitle">Theo dõi doanh thu, tiến độ đơn hàng trực tuyến, phiếu dịch vụ và cảnh báo tồn kho theo thời gian thực.</div>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;">
     <a class="btn btn-primary" href="{{ url_for('admin.sale_create') }}">+ Lập phiếu bán hàng</a>
@@ -14,145 +14,150 @@
 
 <div class="kpi-grid">
   <div class="kpi-card">
-    <div class="kpi-label">Doanh thu bán hàng (Tháng {{ thang }})</div>
+    <div class="kpi-label">Doanh thu bán hàng (T{{ thang }})</div>
     <div class="kpi-value" style="color:var(--gold-600);">{{ dt_ban|vnd }}</div>
+    <div class="kpi-hint">Từ phiếu bán hàng hợp lệ trong tháng</div>
   </div>
-  <div class="kpi-card">
-    <div class="kpi-label">Thực thu dịch vụ (Tháng {{ thang }})</div>
-    <div class="kpi-value">{{ dt_dv|vnd }}</div>
+  <div class="kpi-card kpi-emerald">
+    <div class="kpi-label">Thực thu dịch vụ (T{{ thang }})</div>
+    <div class="kpi-value" style="color:var(--emerald);">{{ dt_dv|vnd }}</div>
+    <div class="kpi-hint">Tổng tiền đã thu từ dịch vụ kim hoàn</div>
   </div>
-  <div class="kpi-card">
-    <div class="kpi-label">Đơn đặt hàng Online chờ xử lý</div>
-    <div class="kpi-value" style="color:var(--warning);">{{ don_cho }} đơn</div>
+  <div class="kpi-card kpi-amber">
+    <div class="kpi-label">Đơn Online chờ xác nhận</div>
+    <div class="kpi-value" style="color:var(--amber);">{{ don_cho }} đơn</div>
+    <div class="kpi-hint"><a href="{{ url_for('admin.sales', trang_thai='Chờ xử lý') }}" style="text-decoration:underline;">Xử lý ngay →</a></div>
   </div>
-  <div class="kpi-card">
+  <div class="kpi-card kpi-sapphire">
     <div class="kpi-label">Phiếu dịch vụ chưa hoàn thành</div>
-    <div class="kpi-value" style="color:var(--info);">{{ dv_chua_xong }} phiếu</div>
+    <div class="kpi-value" style="color:var(--sapphire);">{{ dv_chua_xong }} phiếu</div>
+    <div class="kpi-hint">{{ tong_sp }} sản phẩm đang kinh doanh</div>
   </div>
 </div>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px;">
+<div class="split-grid">
   <div class="card">
     <div class="card-title">
-      <span>🛒 Đơn đặt hàng Online chờ xác nhận</span>
+      <span>📊 Biểu đồ tổng doanh thu 6 tháng gần nhất</span>
+      <a class="btn btn-outline btn-sm" href="{{ url_for('admin.report_revenue') }}">Xem báo cáo chi tiết</a>
+    </div>
+    <div class="bar-chart">
+      {% for m in monthly_series %}
+        <div class="bar-col" title="Bán hàng: {{ m.ban|vnd }} | Dịch vụ: {{ m.dv|vnd }}">
+          <div class="bar-val">{{ (m.tong / 1000000)|round(1) if m.tong >= 1000000 else (m.tong|num) }}{{ 'tr' if m.tong >= 1000000 else '' }}</div>
+          <div class="bar-track">
+            <div class="bar-fill" style="height:{{ m.pct_h }}%;"></div>
+          </div>
+          <div class="bar-label">{{ m.label }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span>⚠️ Sản phẩm cần nhập thêm (Tồn ≤ {{ min_ton }})</span>
+      <a class="btn btn-outline btn-sm" href="{{ url_for('admin.inventory_lookup', muc_ton='sap_het') }}">Tra cứu tồn kho</a>
+    </div>
+    {% if low_stock %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Mã SP</th>
+              <th>Tên sản phẩm</th>
+              <th class="text-center">Tồn kho</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in low_stock[:6] %}
+              <tr>
+                <td><strong>{{ p.MaSP }}</strong></td>
+                <td>{{ p.TenSP }}</td>
+                <td class="text-center">
+                  <span class="badge {{ 'badge-danger' if p.SoLuongTon <= 0 else 'badge-warning' }}">
+                    {{ p.SoLuongTon|qty }} {{ p.TenDVT }}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="color:var(--slate-500);margin:0;">Tồn kho tất cả sản phẩm hiện đang ở mức an toàn.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="split-grid">
+  <div class="card">
+    <div class="card-title">
+      <span>🛒 Đơn đặt hàng trực tuyến chờ xử lý</span>
       <a class="btn btn-outline btn-sm" href="{{ url_for('admin.sales', trang_thai='Chờ xử lý') }}">Xem tất cả</a>
     </div>
     {% if pending_orders %}
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Số phiếu</th>
+              <th>Khách hàng</th>
+              <th class="text-right">Tổng tiền</th>
+              <th class="text-right">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for o in pending_orders %}
+              <tr>
+                <td><a href="{{ url_for('admin.sale_detail', so_phieu=o.SoPhieuBan) }}"><strong>{{ o.SoPhieuBan }}</strong></a></td>
+                <td>{{ o.TenKhachHang }}<br><small style="color:var(--slate-500);">{{ o.SoDienThoai or '' }}</small></td>
+                <td class="text-right" style="font-weight:700;">{{ o.TongTien|vnd }}</td>
+                <td class="text-right" style="white-space:nowrap;">
+                  <form action="{{ url_for('admin.sale_complete', so_phieu=o.SoPhieuBan) }}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-success btn-sm">Hoàn tất</button>
+                  </form>
+                  <a class="btn btn-outline btn-sm" href="{{ url_for('admin.sale_detail', so_phieu=o.SoPhieuBan) }}">Xem</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p style="color:var(--slate-500);margin:0;">Hiện không có đơn đặt hàng trực tuyến nào đang chờ xử lý.</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span>🛠️ Phiếu dịch vụ gần đây</span>
+      <a class="btn btn-outline btn-sm" href="{{ url_for('admin.service_status_board') }}">Theo dõi tiến độ</a>
+    </div>
+    <div class="table-wrap">
       <table class="table">
         <thead>
           <tr>
             <th>Số phiếu</th>
             <th>Khách hàng</th>
             <th class="text-right">Tổng tiền</th>
-            <th class="text-right">Thao tác</th>
+            <th>Tình trạng</th>
           </tr>
         </thead>
         <tbody>
-          {% for o in pending_orders %}
+          {% for sv in recent_services %}
             <tr>
-              <td><a href="{{ url_for('admin.sale_detail', so_phieu=o.SoPhieu) }}"><strong>#{{ o.SoPhieu }}</strong></a></td>
-              <td>{{ o.TenKH }}<br><small style="color:var(--slate-500);">{{ o.SoDienThoai }}</small></td>
-              <td class="text-right">{{ o.TongTien|vnd }}</td>
-              <td class="text-right">
-                <form action="{{ url_for('admin.sale_complete', so_phieu=o.SoPhieu) }}" method="post" style="display:inline;">
-                  <button type="submit" class="btn btn-success btn-sm">Hoàn tất</button>
-                </form>
-                <a class="btn btn-outline btn-sm" href="{{ url_for('admin.sale_detail', so_phieu=o.SoPhieu) }}">Xem</a>
-              </td>
+              <td><a href="{{ url_for('admin.service_detail', so_phieu=sv.SoPhieuDV) }}"><strong>{{ sv.SoPhieuDV }}</strong></a></td>
+              <td>{{ sv.TenKhachHang }}</td>
+              <td class="text-right">{{ sv.TongTien|vnd }}</td>
+              <td><span class="badge {{ 'badge-success' if sv.TinhTrang == 'Hoàn thành' else 'badge-warning' }}">{{ sv.TinhTrang }}</span></td>
             </tr>
+          {% else %}
+            <tr><td colspan="4" class="text-center">Chưa có phiếu dịch vụ nào.</td></tr>
           {% endfor %}
         </tbody>
       </table>
-    {% else %}
-      <p style="color:var(--slate-500);margin:0;">Không có đơn hàng nào đang chờ xử lý.</p>
-    {% endif %}
-  </div>
-
-  <div class="card">
-    <div class="card-title">
-      <span>⚠️ Sản phẩm sắp hết hàng (Tồn ≤ {{ min_ton }})</span>
-      <a class="btn btn-outline btn-sm" href="{{ url_for('admin.purchase_create') }}">Nhập thêm hàng</a>
     </div>
-    {% if low_stock %}
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Sản phẩm</th>
-            <th>Loại</th>
-            <th class="text-center">Tồn kho</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for p in low_stock %}
-            <tr>
-              <td><strong>{{ p.TenSP }}</strong></td>
-              <td>{{ p.TenLoaiSP }}</td>
-              <td class="text-center">
-                <span class="badge {{ 'badge-danger' if p.SoLuongTon == 0 else 'badge-warning' }}">{{ p.SoLuongTon }} {{ p.TenDVT }}</span>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% else %}
-      <p style="color:var(--slate-500);margin:0;">Tất cả sản phẩm đều có tồn kho ổn định.</p>
-    {% endif %}
-  </div>
-</div>
-
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px;">
-  <div class="card">
-    <div class="card-title">
-      <span>🧾 Phiếu bán hàng gần đây</span>
-      <a class="btn btn-outline btn-sm" href="{{ url_for('admin.sales') }}">Danh sách</a>
-    </div>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Số phiếu</th>
-          <th>Ngày lập</th>
-          <th>Khách hàng</th>
-          <th class="text-right">Tổng tiền</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for s in recent_sales %}
-          <tr>
-            <td><a href="{{ url_for('admin.sale_detail', so_phieu=s.SoPhieu) }}"><strong>#{{ s.SoPhieu }}</strong></a></td>
-            <td>{{ s.NgayLap|date }}</td>
-            <td>{{ s.TenKH }}</td>
-            <td class="text-right">{{ s.TongTien|vnd }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <div class="card-title">
-      <span>🛠️ Phiếu dịch vụ gần đây</span>
-      <a class="btn btn-outline btn-sm" href="{{ url_for('admin.services_vouchers') }}">Danh sách</a>
-    </div>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Số phiếu</th>
-          <th>Khách hàng</th>
-          <th class="text-right">Tổng tiền</th>
-          <th>Tình trạng</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for sv in recent_services %}
-          <tr>
-            <td><a href="{{ url_for('admin.service_detail', so_phieu=sv.SoPhieu) }}"><strong>#{{ sv.SoPhieu }}</strong></a></td>
-            <td>{{ sv.TenKH }}</td>
-            <td class="text-right">{{ sv.TongTien|vnd }}</td>
-            <td><span class="badge {{ 'badge-success' if sv.TinhTrang == 'Hoàn thành' else 'badge-warning' }}">{{ sv.TinhTrang }}</span></td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
   </div>
 </div>
 {% endblock %}

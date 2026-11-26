@@ -1,11 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Lỗi {{ code }} – {{ store.TenCuaHang }}{% endblock %}
+{% block title %}Thông báo {{ code }} – {{ store.TenCuaHang }}{% endblock %}
 {% block content %}
 <div class="container section">
-  <div class="card text-center" style="max-width:520px;margin:40px auto;padding:36px;">
-    <h1 style="font-size:3rem;margin:0;color:var(--gold-600);">{{ code }}</h1>
-    <p style="font-size:1.1rem;margin:12px 0 24px;">{{ message }}</p>
-    <a class="btn btn-primary" href="{{ url_for('shop.index') }}">Về trang chủ</a>
+  <div class="card text-center" style="max-width:540px;margin:48px auto;padding:42px 32px;">
+    <div style="font-family:var(--font-serif);font-size:3.5rem;font-weight:800;color:var(--gold-500);line-height:1;">{{ code }}</div>
+    <h2 style="margin:12px 0 8px;">Không thể hoàn tất yêu cầu</h2>
+    <p style="color:var(--slate-500);margin:0 0 26px;">{{ message }}</p>
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+      <a class="btn btn-primary" href="{{ url_for('shop.index') }}">Về trang chủ</a>
+      {% if g.user %}
+        <a class="btn btn-outline" href="{{ url_for('admin.dashboard') }}">Về trang quản lý</a>
+      {% endif %}
+    </div>
   </div>
 </div>
 {% endblock %}
